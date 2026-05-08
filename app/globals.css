@@ -51,6 +51,10 @@ a {
   animation: smoke-rise 5s ease-in-out infinite;
 }
 
+.ritual-smoke {
+  animation: ritual-smoke-rise 12s ease-in-out infinite;
+}
+
 .float-slow {
   animation: float-slow 6s ease-in-out infinite;
 }
@@ -74,6 +78,23 @@ a {
   100% {
     opacity: 0;
     transform: translateY(-120px) scale(1.25);
+  }
+}
+
+@keyframes ritual-smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  22% {
+    opacity: 0.9;
+  }
+  72% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-34px);
   }
 }
 

@@ -1,15 +1,18 @@
 "use client";
 
-import { ArrowLeft, RotateCcw, Users } from "lucide-react";
+import { ArrowLeft, ImagePlus, RotateCcw, Trash2, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { RITUAL_OBJECTS } from "@/lib/constants";
 import { scrubMessage } from "@/lib/filters";
 import {
+  clearRoomBackground,
   getCooldownRemaining,
   getMessages,
+  getRoomBackground,
   reportMessage,
+  saveRoomBackground,
   saveMessage,
   updateReaction,
 } from "@/lib/storage";
@@ -29,11 +32,15 @@ export function RoomShell({ room }: { room: Room }) {
   const [objectKey, setObjectKey] = useState(RITUAL_OBJECTS[0].key);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [droppedCount, setDroppedCount] = useState(0);
+  const [roomBackground, setRoomBackground] = useState<string | null>(null);
+  const [backgroundError, setBackgroundError] = useState<string | null>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   const selectedObject = RITUAL_OBJECTS.find((object) => object.key === objectKey) ?? RITUAL_OBJECTS[0];
 
   useEffect(() => {
     setMessages(getMessages(room.slug));
+    setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
 
   const visibleMessages = useMemo(
@@ -87,6 +94,34 @@ export function RoomShell({ room }: { room: Room }) {
     setDroppedCount(0);
   }
 
+  async function updateRoomBackground(file: File | undefined) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setBackgroundError("Choose an image file.");
+      return;
+    }
+
+    try {
+      setBackgroundError(null);
+      const imageDataUrl = await resizeRoomBackground(file);
+      saveRoomBackground(room.slug, imageDataUrl);
+      setRoomBackground(imageDataUrl);
+    } catch {
+      setBackgroundError("Could not save that image. Try a smaller file.");
+    } finally {
+      if (backgroundInputRef.current) {
+        backgroundInputRef.current.value = "";
+      }
+    }
+  }
+
+  function removeRoomBackground() {
+    clearRoomBackground(room.slug);
+    setRoomBackground(null);
+    setBackgroundError(null);
+  }
+
   if (!anonymousUser) {
     return (
       <main className="grid min-h-screen place-items-center px-4">
@@ -127,19 +162,49 @@ export function RoomShell({ room }: { room: Room }) {
               <p className="text-sm font-black uppercase text-neutral-500">Room</p>
               <h1 className="text-2xl font-black">{room.name}</h1>
             </div>
-            <select
-              className="h-10 rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-ink"
-              onChange={(event) => setObjectKey(event.target.value)}
-              value={objectKey}
-            >
-              {RITUAL_OBJECTS.map((object) => (
-                <option key={object.key} value={object.key}>
-                  {object.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                className="h-10 rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-ink"
+                onChange={(event) => setObjectKey(event.target.value)}
+                value={objectKey}
+              >
+                {RITUAL_OBJECTS.map((object) => (
+                  <option key={object.key} value={object.key}>
+                    {object.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => void updateRoomBackground(event.target.files?.[0])}
+                ref={backgroundInputRef}
+                type="file"
+              />
+              <button
+                aria-label="Upload room background"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-neutral-700 transition hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember"
+                onClick={() => backgroundInputRef.current?.click()}
+                title="Upload background"
+                type="button"
+              >
+                <ImagePlus size={18} aria-hidden />
+              </button>
+              {roomBackground ? (
+                <button
+                  aria-label="Remove room background"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-neutral-700 transition hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember"
+                  onClick={removeRoomBackground}
+                  title="Remove background"
+                  type="button"
+                >
+                  <Trash2 size={17} aria-hidden />
+                </button>
+              ) : null}
+            </div>
           </div>
           <RitualObject
+            backgroundImage={roomBackground}
             isAccelerating={timer.isAccelerating}
             object={selectedObject}
             onFilterHoldEnd={selectedObject.key === "cigarette" ? timer.stopAccelerating : undefined}
@@ -147,6 +212,7 @@ export function RoomShell({ room }: { room: Room }) {
             progress={timer.progress}
             roomSlug={room.slug}
           />
+          {backgroundError ? <p className="mt-2 text-sm font-semibold text-rust">{backgroundError}</p> : null}
           <p className="mt-3 text-sm font-semibold text-neutral-600">{selectedObject.action}</p>
         </div>
 
@@ -196,4 +262,39 @@ export function RoomShell({ room }: { room: Room }) {
       ) : null}
     </main>
   );
+}
+
+function resizeRoomBackground(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file);
+    const image = document.createElement("img");
+
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl);
+
+      const maxSize = 1600;
+      const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+      const width = Math.max(1, Math.round(image.naturalWidth * scale));
+      const height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("Canvas is unavailable."));
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl);
+      reject(new Error("Image could not be loaded."));
+    };
+
+    image.src = imageUrl;
+  });
 }

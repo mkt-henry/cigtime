@@ -1,141 +1,179 @@
 "use client";
 
+import { useId } from "react";
+
+export type CigaretteObjectProps = {
+  isActive?: boolean;
+  progress: number;
+};
+
+type SmokerPerspectiveCigaretteProps = CigaretteObjectProps & {
+  isAccelerating?: boolean;
+  onFilterHoldEnd?: () => void;
+  onFilterHoldStart?: () => void;
+};
+
 export function SmokerPerspectiveCigarette({
+  isActive = true,
   isAccelerating,
   onFilterHoldEnd,
   onFilterHoldStart,
   progress,
-}: {
-  isAccelerating?: boolean;
-  onFilterHoldEnd?: () => void;
-  onFilterHoldStart?: () => void;
-  progress: number;
-}) {
-  const filterHeight = 76;
-  const maxPaperHeight = 182;
-  const paperHeight = Math.max(32, maxPaperHeight * (1 - progress));
-  const ashHeight = Math.min(64, 10 + progress * 70);
-  const emberSize = 18 + progress * 5 + (isAccelerating ? 8 : 0);
-  const smokeStrength = Math.min(1, 0.42 + progress * 0.44 + (isAccelerating ? 0.24 : 0));
-  const ashBottom = 34 + filterHeight + paperHeight - 2;
+}: SmokerPerspectiveCigaretteProps) {
+  const pct = Math.min(1, Math.max(0, progress));
+  const svgId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const paperGradientId = `ritual-paper-${svgId}`;
+  const filterGradientId = `ritual-filter-${svgId}`;
+
+  const filterX = 332;
+  const filterWidth = 42;
+  const maxPaperWidth = 112;
+  const paperWidth = Math.max(10, maxPaperWidth * (1 - pct * 0.92));
+  const ashWidth = Math.min(22, 7 + pct * 20);
+  const cigaretteY = 238;
+  const cigaretteHeight = 13;
+  const paperX = filterX + filterWidth - 1;
+  const ashX = paperX + paperWidth - 1;
+  const litX = ashX + ashWidth - 1;
+  const centerY = cigaretteY + cigaretteHeight / 2;
+  const smokeOpacity = isActive ? Math.min(0.3, 0.2 + pct * 0.06 + (isAccelerating ? 0.03 : 0)) : 0.11;
+  const ashOpacity = Math.min(0.9, 0.56 + pct * 0.34);
 
   return (
-    <div className="relative z-10 h-[302px] w-full max-w-[520px] overflow-hidden">
-      <div className="absolute left-1/2 bottom-5 h-10 w-40 -translate-x-1/2 rounded-[50%] bg-black/35 blur-xl" />
+    <div className="relative z-10 h-[302px] w-full max-w-[560px] overflow-hidden">
+      <svg aria-hidden className="h-full w-full overflow-visible" viewBox="0 0 560 302" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id={filterGradientId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="#9E683A" />
+            <stop offset="0.5" stopColor="#B8763E" />
+            <stop offset="1" stopColor="#7B5231" />
+          </linearGradient>
+          <linearGradient id={paperGradientId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="#DED5BE" />
+            <stop offset="0.42" stopColor="#F2E8CF" />
+            <stop offset="1" stopColor="#D5CBB4" />
+          </linearGradient>
+        </defs>
 
-      <div className="absolute left-1/2 bottom-[34px] h-[258px] w-[112px] -translate-x-1/2">
-        <SmokeColumn bottom={ashBottom + ashHeight - 8} opacity={smokeStrength} />
+        <g transform="rotate(-6 430 246)">
+          <ellipse cx="419" cy="254" fill="rgba(0,0,0,0.16)" rx="79" ry="2.8" />
+          <ellipse cx="420" cy="253.5" fill="rgba(255,255,255,0.06)" rx="42" ry="1" />
 
-        <button
-          aria-label="Hold cigarette filter"
-          className="absolute bottom-0 left-1/2 z-20 h-[76px] w-[42px] -translate-x-1/2 rounded-b-full border border-[#5f412d] bg-[linear-gradient(90deg,#6d3f25_0%,#c88855_42%,#e0aa70_62%,#8f5735_100%)] shadow-[inset_8px_0_8px_rgba(255,255,255,0.24),inset_-8px_0_10px_rgba(51,29,15,0.4),0_12px_22px_rgba(0,0,0,0.28)] outline-none transition hover:brightness-105 focus-visible:ring-2 focus-visible:ring-ember disabled:cursor-default"
-          disabled={progress >= 1}
-          onBlur={onFilterHoldEnd}
-          onKeyDown={(event) => {
-            if (event.key === " " || event.key === "Enter") {
-              event.preventDefault();
-              onFilterHoldStart?.();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === " " || event.key === "Enter") {
-              event.preventDefault();
-              onFilterHoldEnd?.();
-            }
-          }}
-          onPointerCancel={onFilterHoldEnd}
-          onPointerDown={onFilterHoldStart}
-          onPointerLeave={onFilterHoldEnd}
-          onPointerUp={onFilterHoldEnd}
-          title="Hold"
-          type="button"
-        >
-          <span className="absolute left-2 top-4 h-9 w-1.5 rounded-full bg-white/25" />
-          <span className="absolute right-2 top-5 h-8 w-1 rounded-full bg-black/18" />
-          <span className="absolute left-1/2 top-2 h-px w-7 -translate-x-1/2 bg-[#5f3924]/50" />
-          <span className="absolute left-1/2 top-7 h-px w-7 -translate-x-1/2 bg-[#5f3924]/34" />
-        </button>
-
-        <div
-          className="absolute left-1/2 w-[42px] -translate-x-1/2 border-x border-[#d5d0bf] bg-[linear-gradient(90deg,#d9d2bf_0%,#fffdf1_28%,#f4efe2_55%,#cfc5ad_100%)] shadow-[inset_8px_0_8px_rgba(255,255,255,0.78),inset_-8px_0_8px_rgba(86,68,41,0.16),0_10px_22px_rgba(0,0,0,0.22)] transition-[height] duration-500"
-          style={{ bottom: `${filterHeight - 1}px`, height: `${paperHeight}px` }}
-        >
-          <span className="absolute left-2 top-4 h-[72%] w-1.5 rounded-full bg-white/72" />
-          <span className="absolute right-2 top-7 h-[56%] w-1 rounded-full bg-neutral-500/12" />
-          <span className="absolute inset-x-0 bottom-[-1px] h-px bg-[#a88256]/40" />
-        </div>
-
-        <div
-          className="absolute left-1/2 w-[42px] -translate-x-1/2 rounded-t-full border border-neutral-600 bg-[linear-gradient(90deg,#5f5d56_0%,#d2d0c6_45%,#8f8c82_72%,#3f3e39_100%)] shadow-[inset_7px_0_8px_rgba(255,255,255,0.23),inset_-7px_0_8px_rgba(0,0,0,0.32)] transition-all duration-500"
-          style={{ bottom: `${ashBottom}px`, height: `${ashHeight}px` }}
-        >
-          <span className="absolute left-2 top-3 h-[52%] w-1 rounded-full bg-white/26" />
-          <span className="absolute right-2 top-5 h-[42%] w-1 rounded-full bg-black/24" />
-          <span className="absolute left-1/2 top-5 h-px w-8 -translate-x-1/2 rotate-[-18deg] bg-black/25" />
-          <span className="absolute left-1/2 top-9 h-px w-7 -translate-x-1/2 rotate-[14deg] bg-white/22" />
-          <span
-            className="ember-flicker absolute left-1/2 top-[-10px] rounded-full bg-[radial-gradient(circle,#fff1b8_0%,#f2a65a_38%,#c8401c_68%,rgba(87,28,16,0.05)_100%)] shadow-[0_0_34px_rgba(242,166,90,0.98)]"
-            style={{
-              height: `${emberSize}px`,
-              transform: "translateX(-50%)",
-              width: `${emberSize}px`,
-            }}
+          <rect
+            fill={`url(#${filterGradientId})`}
+            height={cigaretteHeight}
+            rx="2"
+            stroke="rgba(82,52,32,0.34)"
+            strokeWidth="0.8"
+            width={filterWidth}
+            x={filterX}
+            y={cigaretteY}
           />
-          {isAccelerating ? (
-            <span className="absolute left-1/2 top-[-21px] h-14 w-14 -translate-x-1/2 rounded-full border border-ember/80 shadow-[0_0_48px_rgba(242,166,90,0.98)]" />
+          <path d={`M ${filterX + 8} ${cigaretteY + 6} H ${filterX + filterWidth - 8}`} stroke="rgba(82,52,32,0.24)" strokeWidth="0.8" />
+          <path d={`M ${filterX + 8} ${cigaretteY + 10} H ${filterX + filterWidth - 10}`} stroke="rgba(238,205,164,0.18)" strokeWidth="0.8" />
+          <rect fill="rgba(67,42,27,0.18)" height={cigaretteHeight} width="1" x={filterX + filterWidth - 1} y={cigaretteY} />
+
+          <rect
+            fill={`url(#${paperGradientId})`}
+            height={cigaretteHeight}
+            stroke="rgba(128,113,90,0.28)"
+            strokeWidth="0.8"
+            width={paperWidth}
+            x={paperX}
+            y={cigaretteY}
+          />
+          <path
+            d={`M ${paperX + 12} ${cigaretteY + 7} H ${paperX + Math.max(20, paperWidth - 14)}`}
+            stroke="rgba(255,251,238,0.48)"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+          />
+          <path
+            d={`M ${paperX + 20} ${cigaretteY + 14} H ${paperX + Math.max(24, paperWidth * 0.72)}`}
+            stroke="rgba(96,82,62,0.08)"
+            strokeLinecap="round"
+            strokeWidth="1.4"
+          />
+
+          <rect
+            fill="#5C5C55"
+            height={cigaretteHeight}
+            opacity={ashOpacity}
+            rx="2"
+            width={ashWidth}
+            x={ashX}
+            y={cigaretteY}
+          />
+          <path
+            d={`M ${ashX + 4} ${cigaretteY + 6} L ${ashX + ashWidth - 3} ${cigaretteY + 4}`}
+            opacity={ashOpacity * 0.45}
+            stroke="rgba(245,240,226,0.36)"
+            strokeLinecap="round"
+            strokeWidth="0.8"
+          />
+          <path
+            d={`M ${ashX + 5} ${cigaretteY + 10} L ${ashX + ashWidth - 4} ${cigaretteY + 8}`}
+            opacity={ashOpacity * 0.5}
+            stroke="rgba(25,25,22,0.28)"
+            strokeLinecap="round"
+            strokeWidth="0.8"
+          />
+          <ellipse cx={litX + 1.5} cy={centerY} fill="#77766e" opacity={ashOpacity * 0.75} rx="2.6" ry="4.6" />
+          <circle cx={litX - 4} cy={centerY + 8} fill="#8b897f" opacity={ashOpacity * 0.42} r="1.2" />
+          <circle cx={litX + 5} cy={centerY + 10} fill="#c5c0b4" opacity={ashOpacity * 0.34} r="0.9" />
+        </g>
+
+        <g fill="none" stroke="#E8E0D2" strokeLinecap="round" strokeWidth="1" style={{ opacity: smokeOpacity }}>
+          <path
+            className="ritual-smoke [animation-delay:-3s]"
+            d={`M ${litX - 2} ${cigaretteY - 2} C ${litX - 15} 218, ${litX + 7} 207, ${litX - 1} 190 C ${litX - 8} 175, ${litX + 10} 168, ${litX + 5} 154`}
+          />
+          <path
+            className="ritual-smoke [animation-delay:-7s]"
+            d={`M ${litX + 4} ${cigaretteY - 1} C ${litX + 18} 220, ${litX - 2} 205, ${litX + 15} 190 C ${litX + 27} 179, ${litX + 14} 168, ${litX + 25} 157`}
+          />
+          {pct > 0.24 ? (
+            <path
+              className="ritual-smoke [animation-delay:-10s]"
+              d={`M ${litX - 4} ${cigaretteY} C ${litX - 9} 222, ${litX - 25} 209, ${litX - 20} 194 C ${litX - 15} 181, ${litX - 31} 172, ${litX - 25} 161`}
+              opacity="0.72"
+            />
           ) : null}
-        </div>
-      </div>
+        </g>
+      </svg>
 
-      <AshFall progress={progress} />
-    </div>
-  );
-}
-
-function SmokeColumn({ bottom, opacity }: { bottom: number; opacity: number }) {
-  return (
-    <div className="absolute left-1/2 h-36 w-28 -translate-x-1/2" style={{ bottom: `${bottom}px` }}>
-      <span
-        className="smoke-thread absolute left-12 top-14 h-28 w-10 rounded-full border-l-2 border-white/80"
-        style={{ opacity }}
-      />
-      <span
-        className="smoke-thread absolute left-16 top-4 h-36 w-14 rounded-full border-r-2 border-white/65 [animation-delay:0.8s]"
-        style={{ opacity: opacity * 0.88 }}
-      />
-      <span
-        className="smoke-thread absolute left-5 top-8 h-32 w-12 rounded-full border-l-2 border-moss/35 [animation-delay:1.5s]"
-        style={{ opacity: opacity * 0.76 }}
-      />
-      <span
-        className="smoke-thread absolute left-20 top-16 h-24 w-10 rounded-full border-r-2 border-rust/30 [animation-delay:2.1s]"
-        style={{ opacity: opacity * 0.7 }}
-      />
-    </div>
-  );
-}
-
-function AshFall({ progress }: { progress: number }) {
-  if (progress < 0.18) return null;
-
-  return (
-    <>
-      <span
-        className="absolute left-1/2 z-20 rounded-full bg-neutral-400/75 blur-[0.5px]"
-        style={{
-          height: `${3 + progress * 5}px`,
-          top: `${92 + progress * 82}px`,
-          transform: `translateX(${18 + progress * 20}px)`,
-          width: `${8 + progress * 16}px`,
+      <button
+        aria-label="Hold cigarette filter"
+        className="absolute z-30 rounded-[3px] outline-none transition focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-default"
+        disabled={pct >= 1}
+        onBlur={onFilterHoldEnd}
+        onKeyDown={(event) => {
+          if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            onFilterHoldStart?.();
+          }
         }}
-      />
-      <span
-        className="absolute left-1/2 z-20 h-1.5 w-1.5 rounded-full bg-neutral-300/70"
-        style={{
-          top: `${120 + progress * 86}px`,
-          transform: `translateX(${-18 - progress * 14}px)`,
+        onKeyUp={(event) => {
+          if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            onFilterHoldEnd?.();
+          }
         }}
+        onPointerCancel={onFilterHoldEnd}
+        onPointerDown={onFilterHoldStart}
+        onPointerLeave={onFilterHoldEnd}
+        onPointerUp={onFilterHoldEnd}
+        style={{
+          height: `${(cigaretteHeight / 302) * 100}%`,
+          left: `${(filterX / 560) * 100}%`,
+          top: `${(cigaretteY / 302) * 100}%`,
+          transform: "rotate(-5deg)",
+          transformOrigin: "right center",
+          width: `${(filterWidth / 560) * 100}%`,
+        }}
+        title="Hold"
+        type="button"
       />
-    </>
+    </div>
   );
 }

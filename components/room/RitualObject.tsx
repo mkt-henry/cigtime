@@ -2,6 +2,7 @@ import type { RitualObject as RitualObjectType } from "@/lib/types";
 import { SmokerPerspectiveCigarette } from "./SmokerPerspectiveCigarette";
 
 export function RitualObject({
+  backgroundImage,
   isAccelerating,
   object,
   onFilterHoldEnd,
@@ -9,6 +10,7 @@ export function RitualObject({
   progress,
   roomSlug,
 }: {
+  backgroundImage?: string | null;
   isAccelerating?: boolean;
   object: RitualObjectType;
   onFilterHoldEnd?: () => void;
@@ -20,8 +22,13 @@ export function RitualObject({
 
   return (
     <div className="relative mx-auto flex h-[360px] w-full items-center justify-center overflow-hidden rounded-lg border border-line bg-[#ecece6]">
-      {roomSlug === "rooftop" ? <RooftopView progress={pct} /> : null}
-      <div className="absolute inset-x-8 top-6 z-20 flex items-center justify-between gap-4 text-sm font-bold text-neutral-700">
+      {backgroundImage ? <CustomRoomBackground imageUrl={backgroundImage} /> : null}
+      {!backgroundImage && roomSlug === "rooftop" ? <RooftopView progress={pct} /> : null}
+      <div
+        className={`absolute inset-x-8 top-6 z-20 flex items-center justify-between gap-4 text-sm font-bold ${
+          backgroundImage ? "text-white drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]" : "text-neutral-700"
+        }`}
+      >
         <span>{object.name}</span>
         <span>{object.tone}</span>
       </div>
@@ -34,6 +41,23 @@ export function RitualObject({
         progress={pct}
       />
     </div>
+  );
+}
+
+function CustomRoomBackground({ imageUrl }: { imageUrl: string }) {
+  return (
+    <>
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${imageUrl})` }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,16,20,0.12)_0%,rgba(11,16,20,0.18)_48%,rgba(11,16,20,0.42)_100%)]"
+      />
+      <div aria-hidden className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
+    </>
   );
 }
 

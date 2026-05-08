@@ -4,6 +4,7 @@ import type { ChatMessage, ReactionType } from "./types";
 const MESSAGE_KEY = "cigtime.messages";
 const LAST_SENT_KEY = "cigtime.lastSentAt";
 const MUTED_KEY = "cigtime.mutedUsers";
+const ROOM_BACKGROUND_KEY = "cigtime.roomBackgrounds";
 
 export function getMessages(roomSlug: string): ChatMessage[] {
   const stored = readMessages().filter((message) => message.roomSlug === roomSlug);
@@ -62,6 +63,22 @@ export function muteUser(anonymousUserId: string) {
   window.localStorage.setItem(MUTED_KEY, JSON.stringify([...muted]));
 }
 
+export function getRoomBackground(roomSlug: string) {
+  return readRoomBackgrounds()[roomSlug] ?? null;
+}
+
+export function saveRoomBackground(roomSlug: string, imageDataUrl: string) {
+  const backgrounds = readRoomBackgrounds();
+  backgrounds[roomSlug] = imageDataUrl;
+  window.localStorage.setItem(ROOM_BACKGROUND_KEY, JSON.stringify(backgrounds));
+}
+
+export function clearRoomBackground(roomSlug: string) {
+  const backgrounds = readRoomBackgrounds();
+  delete backgrounds[roomSlug];
+  window.localStorage.setItem(ROOM_BACKGROUND_KEY, JSON.stringify(backgrounds));
+}
+
 function readMessages(): ChatMessage[] {
   const raw = window.localStorage.getItem(MESSAGE_KEY);
   return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
@@ -69,6 +86,11 @@ function readMessages(): ChatMessage[] {
 
 function writeMessages(messages: ChatMessage[]) {
   window.localStorage.setItem(MESSAGE_KEY, JSON.stringify(messages));
+}
+
+function readRoomBackgrounds(): Record<string, string> {
+  const raw = window.localStorage.getItem(ROOM_BACKGROUND_KEY);
+  return raw ? (JSON.parse(raw) as Record<string, string>) : {};
 }
 
 function createSeedMessages(roomSlug: string): ChatMessage[] {
