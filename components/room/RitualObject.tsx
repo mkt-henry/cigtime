@@ -1,5 +1,5 @@
 import type { RitualObject as RitualObjectType } from "@/lib/types";
-import { SmokerPerspectiveCigarette } from "./SmokerPerspectiveCigarette";
+import { SmokerPerspectiveCigarette } from "@/components/common/SmokerPerspectiveCigarette";
 
 export function RitualObject({
   backgroundImage,
@@ -145,21 +145,23 @@ export function LegacyBurningCigarette({
   const emberScale = (1 - progress * 0.25) * (isAccelerating ? 1.28 : 1);
 
   return (
-    <div className="relative z-10 h-56 w-[320px]">
+    <div className="relative z-10 h-full w-full">
       <div
-        className="smoke-thread absolute left-[57%] top-2 h-36 w-10 rounded-full border-l-2 border-white/70"
+        className="smoke-thread absolute left-[68%] top-[8%] h-[36%] w-10 rounded-full border-l-2 border-white/70"
         style={{ opacity: smokeOpacity }}
       />
       <div
-        className="smoke-thread absolute left-[63%] top-7 h-32 w-12 rounded-full border-r-2 border-moss/45 [animation-delay:1s]"
+        className="smoke-thread absolute left-[75%] top-[14%] h-[32%] w-12 rounded-full border-r-2 border-moss/45 [animation-delay:1s]"
         style={{ opacity: smokeOpacity }}
       />
-      <div
-        className="smoke-thread absolute left-[51%] top-10 h-28 w-9 rounded-full border-l-2 border-rust/35 [animation-delay:1.8s]"
-        style={{ opacity: smokeOpacity }}
-      />
+      {progress > 0.24 ? (
+        <div
+          className="smoke-thread absolute left-[62%] top-[18%] h-[28%] w-9 rounded-full border-l-2 border-rust/35 [animation-delay:1.8s]"
+          style={{ opacity: smokeOpacity }}
+        />
+      ) : null}
 
-      <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 rotate-[-8deg] items-center drop-shadow-xl">
+      <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 rotate-[-8deg] items-center drop-shadow-xl">
         <button
           aria-label="Pull the cigarette filter"
           className="h-7 w-[46px] rounded-l-full border border-neutral-700 bg-gradient-to-r from-[#9b5f37] to-[#d4a06d] outline-none transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ember disabled:cursor-default"
@@ -193,24 +195,15 @@ export function LegacyBurningCigarette({
           style={{ width: `${ashWidth}px` }}
         >
           <span
-            className="pulse-soft absolute right-[-8px] top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_24px_rgba(242,166,90,0.95)]"
+            className="absolute right-[-8px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_14px_rgba(242,166,90,0.62)]"
             style={{ transform: `translateY(-50%) scale(${emberScale})` }}
           />
           {isAccelerating ? (
-            <span className="absolute right-[-16px] top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border border-ember/80 shadow-[0_0_32px_rgba(242,166,90,0.9)]" />
+            <span className="absolute right-[-16px] top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border border-ember/60 shadow-[0_0_24px_rgba(242,166,90,0.65)]" />
           ) : null}
           <span className="absolute right-2 top-1 h-1.5 w-6 rounded-full bg-white/45" />
         </div>
       </div>
-
-      <div
-        className="absolute bottom-12 rounded-full bg-neutral-500/60 blur-[1px] transition-all"
-        style={{
-          height: `${3 + progress * 5}px`,
-          left: `${210 + progress * 38}px`,
-          width: `${16 + progress * 38}px`,
-        }}
-      />
     </div>
   );
 }

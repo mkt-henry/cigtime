@@ -132,3 +132,31 @@ a {
     filter: brightness(1.12);
   }
 }
+
+.ash-particle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ash-particle-a {
+  animation: ash-fall-a 1.8s ease-in forwards;
+}
+.ash-particle-b {
+  animation: ash-fall-b 1.95s ease-in forwards;
+}
+.ash-particle-c {
+  animation: ash-fall-c 1.7s ease-in forwards;
+}
+
+@keyframes ash-fall-a {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0.72; }
+  100% { transform: translate(-9px, 54px) rotate(-28deg); opacity: 0; }
+}
+@keyframes ash-fall-b {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0.62; }
+  100% { transform: translate(-3px, 50px) rotate(16deg); opacity: 0; }
+}
+@keyframes ash-fall-c {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0.55; }
+  100% { transform: translate(6px, 56px) rotate(-12deg); opacity: 0; }
+}
