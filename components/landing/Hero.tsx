@@ -83,11 +83,11 @@ function RitualScene() {
       <div className="smoke-thread absolute left-[60%] top-8 h-24 w-8 rounded-full border-l-2 border-moss/40" />
       <div className="smoke-thread absolute left-[67%] top-12 h-28 w-8 rounded-full border-r-2 border-rust/35 [animation-delay:1s]" />
       <div className="smoke-thread absolute left-[63%] top-6 h-20 w-10 rounded-full border-l-2 border-neutral-500/30 [animation-delay:1.8s]" />
-      <div className="float-slow absolute bottom-20 left-1/2 flex h-7 -translate-x-1/2 rotate-[-7deg] items-center shadow-lg">
-        <div className="h-7 w-12 rounded-[3px] border border-[#5f412d] bg-[linear-gradient(180deg,#84502f,#d69a63,#9a603b)]" />
-        <div className="h-7 w-24 border-y border-[#d5d0bf] bg-[linear-gradient(180deg,#f0eadb,#fffdf3,#d5cbb6)]" />
-        <div className="relative h-7 w-9 rounded-r-sm border border-neutral-700 bg-[linear-gradient(180deg,#5f5d56,#d2d0c6,#56544d)]">
-          <div className="absolute right-[-7px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_22px_rgba(242,166,90,0.92)]" />
+      <div className="float-slow absolute bottom-[5.4rem] left-1/2 flex h-11 -translate-x-1/2 rotate-[-90deg] items-center">
+        <div className="h-11 w-20 rounded-[5px] border border-[#5f412d] bg-[linear-gradient(180deg,#84502f,#d69a63,#9a603b)]" />
+        <div className="h-11 w-40 border-y border-[#d5d0bf] bg-[linear-gradient(180deg,#f0eadb,#fffdf3,#d5cbb6)]" />
+        <div className="relative h-11 w-14 rounded-r-sm border border-neutral-700 bg-[linear-gradient(180deg,#5f5d56,#d2d0c6,#56544d)]">
+          <div className="absolute right-[-9px] top-1/2 h-7 w-7 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_22px_rgba(242,166,90,0.92)]" />
         </div>
       </div>
       <Coffee className="absolute bottom-4 left-7 text-moss" size={34} aria-hidden />

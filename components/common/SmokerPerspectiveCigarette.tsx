@@ -40,17 +40,28 @@ export function SmokerPerspectiveCigarette({
   const filterGradientId = `ritual-filter-${svgId}`;
   const emberGlowId = `ember-glow-${svgId}`;
 
-  const filterX = 332;
-  const filterWidth = 42;
-  const maxPaperWidth = 112;
+  const filterX = 232;
+  const filterWidth = 68;
+  const maxPaperWidth = 200;
   const paperWidth = Math.max(10, maxPaperWidth * (1 - pct * 0.92));
-  const ashWidth = Math.min(22, 7 + pct * 20);
-  const cigaretteY = 150;
-  const cigaretteHeight = 13;
+  const ashWidth = Math.min(38, 11 + pct * 31);
+  const cigaretteY = 142;
+  const cigaretteHeight = 24;
   const paperX = filterX + filterWidth - 1;
   const ashX = paperX + paperWidth - 1;
   const litX = ashX + ashWidth - 1;
   const centerY = cigaretteY + cigaretteHeight / 2;
+  const cigaretteRotation = -90;
+  const cigarettePivotX = 340;
+  const cigarettePivotY = 188;
+  const litPoint = rotatePoint(litX, centerY, cigaretteRotation, cigarettePivotX, cigarettePivotY);
+  const filterButtonCenter = rotatePoint(
+    filterX + filterWidth / 2,
+    centerY,
+    cigaretteRotation,
+    cigarettePivotX,
+    cigarettePivotY,
+  );
   litXRef.current = litX;
   const smokeOpacity = isActive ? Math.min(0.3, 0.2 + pct * 0.06 + (isAccelerating ? 0.03 : 0)) : 0.11;
   const ashOpacity = Math.min(0.9, 0.56 + pct * 0.34);
@@ -104,10 +115,7 @@ export function SmokerPerspectiveCigarette({
           </linearGradient>
         </defs>
 
-        <g transform={`rotate(-6 430 ${cigaretteY + 8})`}>
-          <ellipse cx="419" cy={cigaretteY + 16} fill="rgba(0,0,0,0.16)" rx="79" ry="2.8" />
-          <ellipse cx="420" cy={cigaretteY + 15.5} fill="rgba(255,255,255,0.06)" rx="42" ry="1" />
-
+        <g transform={`rotate(${cigaretteRotation} ${cigarettePivotX} ${cigarettePivotY})`}>
           <rect
             fill={`url(#${filterGradientId})`}
             height={cigaretteHeight}
@@ -118,8 +126,8 @@ export function SmokerPerspectiveCigarette({
             x={filterX}
             y={cigaretteY}
           />
-          <path d={`M ${filterX + 8} ${cigaretteY + 6} H ${filterX + filterWidth - 8}`} stroke="rgba(82,52,32,0.24)" strokeWidth="0.8" />
-          <path d={`M ${filterX + 8} ${cigaretteY + 10} H ${filterX + filterWidth - 10}`} stroke="rgba(238,205,164,0.18)" strokeWidth="0.8" />
+          <path d={`M ${filterX + 12} ${cigaretteY + 10} H ${filterX + filterWidth - 12}`} stroke="rgba(82,52,32,0.24)" strokeWidth="1.2" />
+          <path d={`M ${filterX + 12} ${cigaretteY + 17} H ${filterX + filterWidth - 14}`} stroke="rgba(238,205,164,0.18)" strokeWidth="1.2" />
           <rect fill="rgba(67,42,27,0.18)" height={cigaretteHeight} width="1" x={filterX + filterWidth - 1} y={cigaretteY} />
 
           <rect
@@ -132,16 +140,16 @@ export function SmokerPerspectiveCigarette({
             y={cigaretteY}
           />
           <path
-            d={`M ${paperX + 12} ${cigaretteY + 7} H ${paperX + Math.max(20, paperWidth - 14)}`}
+            d={`M ${paperX + 18} ${cigaretteY + 11} H ${paperX + Math.max(28, paperWidth - 22)}`}
             stroke="rgba(255,251,238,0.48)"
             strokeLinecap="round"
-            strokeWidth="1.2"
+            strokeWidth="1.8"
           />
           <path
-            d={`M ${paperX + 20} ${cigaretteY + 14} H ${paperX + Math.max(24, paperWidth * 0.72)}`}
+            d={`M ${paperX + 28} ${cigaretteY + 24} H ${paperX + Math.max(34, paperWidth * 0.72)}`}
             stroke="rgba(96,82,62,0.08)"
             strokeLinecap="round"
-            strokeWidth="1.4"
+            strokeWidth="1.9"
           />
 
           <rect
@@ -154,18 +162,18 @@ export function SmokerPerspectiveCigarette({
             y={cigaretteY}
           />
           <path
-            d={`M ${ashX + 4} ${cigaretteY + 6} L ${ashX + ashWidth - 3} ${cigaretteY + 4}`}
+            d={`M ${ashX + 6} ${cigaretteY + 10} L ${ashX + ashWidth - 5} ${cigaretteY + 7}`}
             opacity={ashOpacity * 0.45}
             stroke="rgba(245,240,226,0.36)"
             strokeLinecap="round"
-            strokeWidth="0.8"
+            strokeWidth="1.2"
           />
           <path
-            d={`M ${ashX + 5} ${cigaretteY + 10} L ${ashX + ashWidth - 4} ${cigaretteY + 8}`}
+            d={`M ${ashX + 7} ${cigaretteY + 18} L ${ashX + ashWidth - 6} ${cigaretteY + 15}`}
             opacity={ashOpacity * 0.5}
             stroke="rgba(25,25,22,0.28)"
             strokeLinecap="round"
-            strokeWidth="0.8"
+            strokeWidth="1.2"
           />
           <ellipse
             cx={litX - 1}
@@ -173,21 +181,21 @@ export function SmokerPerspectiveCigarette({
             fill="#C8702A"
             filter={`url(#${emberGlowId})`}
             opacity={isActive ? (isAccelerating ? 0.72 : 0.55) : 0.2}
-            rx="5.5"
-            ry="6"
+            rx="8.5"
+            ry="9"
           />
-          <ellipse cx={litX - 1} cy={centerY} fill="#E8943A" opacity={isActive ? (isAccelerating ? 0.75 : 0.6) : 0.2} rx="1.6" ry="2" />
-          <ellipse cx={litX + 1.5} cy={centerY} fill="#77766e" opacity={ashOpacity * 0.75} rx="2.6" ry="4.6" />
-          <circle cx={litX - 4} cy={centerY + 8} fill="#8b897f" opacity={ashOpacity * 0.42} r="1.2" />
-          <circle cx={litX + 5} cy={centerY + 10} fill="#c5c0b4" opacity={ashOpacity * 0.34} r="0.9" />
+          <ellipse cx={litX - 1} cy={centerY} fill="#E8943A" opacity={isActive ? (isAccelerating ? 0.75 : 0.6) : 0.2} rx="2.7" ry="3.4" />
+          <ellipse cx={litX + 1.5} cy={centerY} fill="#77766e" opacity={ashOpacity * 0.75} rx="4.1" ry="7.4" />
+          <circle cx={litX - 6} cy={centerY + 13} fill="#8b897f" opacity={ashOpacity * 0.42} r="1.8" />
+          <circle cx={litX + 7} cy={centerY + 15} fill="#c5c0b4" opacity={ashOpacity * 0.34} r="1.3" />
         </g>
 
         {particles.map((p) => (
           <ellipse
             key={p.id}
             className={`ash-particle ash-particle-${p.variant}`}
-            cx={p.x}
-            cy={cigaretteY + cigaretteHeight + 2}
+            cx={litPoint.x - (litX - p.x)}
+            cy={litPoint.y + 7}
             fill="#8a887c"
             rx={p.size}
             ry={p.size * 0.55}
@@ -198,16 +206,16 @@ export function SmokerPerspectiveCigarette({
         <g fill="none" stroke="#E8E0D2" strokeLinecap="round" strokeWidth="1" style={{ opacity: smokeOpacity }}>
           <path
             className="ritual-smoke [animation-delay:-3s]"
-            d={`M ${litX - 2} ${cigaretteY - 2} C ${litX - 15} ${cigaretteY - 20}, ${litX + 7} ${cigaretteY - 31}, ${litX - 1} ${cigaretteY - 48} C ${litX - 8} ${cigaretteY - 63}, ${litX + 10} ${cigaretteY - 70}, ${litX + 5} ${cigaretteY - 84}`}
+            d={`M ${litPoint.x - 2} ${litPoint.y - 2} C ${litPoint.x - 14} ${litPoint.y - 17}, ${litPoint.x + 7} ${litPoint.y - 28}, ${litPoint.x - 1} ${litPoint.y - 43} C ${litPoint.x - 8} ${litPoint.y - 56}, ${litPoint.x + 10} ${litPoint.y - 63}, ${litPoint.x + 5} ${litPoint.y - 76}`}
           />
           <path
             className="ritual-smoke [animation-delay:-7s]"
-            d={`M ${litX + 4} ${cigaretteY - 1} C ${litX + 18} ${cigaretteY - 18}, ${litX - 2} ${cigaretteY - 33}, ${litX + 15} ${cigaretteY - 48} C ${litX + 27} ${cigaretteY - 59}, ${litX + 14} ${cigaretteY - 70}, ${litX + 25} ${cigaretteY - 81}`}
+            d={`M ${litPoint.x + 4} ${litPoint.y - 1} C ${litPoint.x + 17} ${litPoint.y - 16}, ${litPoint.x - 2} ${litPoint.y - 30}, ${litPoint.x + 15} ${litPoint.y - 44} C ${litPoint.x + 27} ${litPoint.y - 55}, ${litPoint.x + 14} ${litPoint.y - 65}, ${litPoint.x + 25} ${litPoint.y - 75}`}
           />
           {pct > 0.24 ? (
             <path
               className="ritual-smoke [animation-delay:-10s]"
-              d={`M ${litX - 4} ${cigaretteY} C ${litX - 9} ${cigaretteY - 16}, ${litX - 25} ${cigaretteY - 29}, ${litX - 20} ${cigaretteY - 44} C ${litX - 15} ${cigaretteY - 57}, ${litX - 31} ${cigaretteY - 66}, ${litX - 25} ${cigaretteY - 77}`}
+              d={`M ${litPoint.x - 4} ${litPoint.y} C ${litPoint.x - 9} ${litPoint.y - 15}, ${litPoint.x - 24} ${litPoint.y - 27}, ${litPoint.x - 20} ${litPoint.y - 41} C ${litPoint.x - 15} ${litPoint.y - 54}, ${litPoint.x - 31} ${litPoint.y - 62}, ${litPoint.x - 25} ${litPoint.y - 72}`}
               opacity="0.72"
             />
           ) : null}
@@ -218,6 +226,7 @@ export function SmokerPerspectiveCigarette({
         aria-label="Hold cigarette filter"
         className="absolute z-30 rounded-[3px] outline-none transition focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-default"
         disabled={pct >= 1}
+        onClick={(e) => e.stopPropagation()}
         onBlur={onFilterHoldEnd}
         onKeyDown={(event) => {
           if (event.key === " " || event.key === "Enter") {
@@ -237,10 +246,10 @@ export function SmokerPerspectiveCigarette({
         onPointerUp={onFilterHoldEnd}
         style={{
           height: `${(cigaretteHeight / 302) * 100}%`,
-          left: `${(filterX / 560) * 100}%`,
-          top: `${(cigaretteY / 302) * 100}%`,
-          transform: "rotate(-5deg)",
-          transformOrigin: "right center",
+          left: `${((filterButtonCenter.x - filterWidth / 2) / 560) * 100}%`,
+          top: `${((filterButtonCenter.y - cigaretteHeight / 2) / 302) * 100}%`,
+          transform: `rotate(${cigaretteRotation}deg)`,
+          transformOrigin: "center center",
           width: `${(filterWidth / 560) * 100}%`,
         }}
         title="Hold"
@@ -248,4 +257,15 @@ export function SmokerPerspectiveCigarette({
       />
     </div>
   );
+}
+
+function rotatePoint(x: number, y: number, degrees: number, centerX: number, centerY: number) {
+  const radians = (degrees * Math.PI) / 180;
+  const dx = x - centerX;
+  const dy = y - centerY;
+
+  return {
+    x: centerX + dx * Math.cos(radians) - dy * Math.sin(radians),
+    y: centerY + dx * Math.sin(radians) + dy * Math.cos(radians),
+  };
 }

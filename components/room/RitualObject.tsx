@@ -1,8 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { RitualObject as RitualObjectType } from "@/lib/types";
 import { SmokerPerspectiveCigarette } from "@/components/common/SmokerPerspectiveCigarette";
 
 export function RitualObject({
   backgroundImage,
+  fullscreen,
   isAccelerating,
   object,
   onFilterHoldEnd,
@@ -11,6 +15,7 @@ export function RitualObject({
   roomSlug,
 }: {
   backgroundImage?: string | null;
+  fullscreen?: boolean;
   isAccelerating?: boolean;
   object: RitualObjectType;
   onFilterHoldEnd?: () => void;
@@ -21,18 +26,28 @@ export function RitualObject({
   const pct = Math.min(1, Math.max(0, progress));
 
   return (
-    <div className="relative mx-auto flex h-[360px] w-full items-center justify-center overflow-hidden rounded-lg border border-line bg-[#ecece6]">
+    <div
+      className={
+        fullscreen
+          ? "relative flex h-full w-full items-center justify-center overflow-hidden bg-[#ecece6]"
+          : "relative mx-auto flex h-[360px] w-full items-center justify-center overflow-hidden rounded-lg border border-line bg-[#ecece6]"
+      }
+    >
       {backgroundImage ? <CustomRoomBackground imageUrl={backgroundImage} /> : null}
-      {!backgroundImage && roomSlug === "rooftop" ? <RooftopView progress={pct} /> : null}
-      <div
-        className={`absolute inset-x-8 top-6 z-20 flex items-center justify-between gap-4 text-sm font-bold ${
-          backgroundImage ? "text-white drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]" : "text-neutral-700"
-        }`}
-      >
-        <span>{object.name}</span>
-        <span>{object.tone}</span>
-      </div>
-      <div className="absolute bottom-0 left-0 z-30 h-1 bg-moss transition-all" style={{ width: `${pct * 100}%` }} />
+      {!backgroundImage && roomSlug === "rooftop" ? <RooftopView /> : null}
+      {!fullscreen && (
+        <>
+          <div
+            className={`absolute inset-x-8 top-6 z-20 flex items-center justify-between gap-4 text-sm font-bold ${
+              backgroundImage ? "text-white drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]" : "text-neutral-700"
+            }`}
+          >
+            <span>{object.name}</span>
+            <span>{object.tone}</span>
+          </div>
+          <div className="absolute bottom-0 left-0 z-30 h-1 bg-moss transition-all" style={{ width: `${pct * 100}%` }} />
+        </>
+      )}
       <ObjectVisual
         isAccelerating={isAccelerating}
         objectKey={object.key}
@@ -208,7 +223,8 @@ export function LegacyBurningCigarette({
   );
 }
 
-function RooftopView({ progress }: { progress: number }) {
+function RooftopView() {
+  const progress = useTimeOfDayProgress();
   const dusk = Math.min(1, progress * 1.25);
   const night = Math.max(0, (progress - 0.55) / 0.45);
   const sunTop = 46 + progress * 108;
@@ -243,6 +259,35 @@ function RooftopView({ progress }: { progress: number }) {
       <div className="absolute bottom-7 left-1/2 h-3 w-[72%] -translate-x-1/2 rounded-full bg-black/30 blur-sm" />
     </div>
   );
+}
+
+function useTimeOfDayProgress() {
+  const [progress, setProgress] = useState(getTimeOfDayProgress);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setProgress(getTimeOfDayProgress());
+    }, 60_000);
+
+    return () => window.clearInterval(timerId);
+  }, []);
+
+  return progress;
+}
+
+function getTimeOfDayProgress() {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const dawnStart = 5 * 60;
+  const dayStart = 7 * 60;
+  const sunsetStart = 17 * 60;
+  const nightStart = 20 * 60 + 30;
+
+  if (minutes < dawnStart) return 1;
+  if (minutes < dayStart) return 1 - (minutes - dawnStart) / (dayStart - dawnStart);
+  if (minutes < sunsetStart) return 0;
+  if (minutes < nightStart) return (minutes - sunsetStart) / (nightStart - sunsetStart);
+  return 1;
 }
 
 function Building({ index, lightOpacity }: { index: number; lightOpacity: number }) {
