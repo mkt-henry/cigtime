@@ -3,7 +3,8 @@
 import { ArrowLeft, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent, MouseEvent } from "react";
 import { Button } from "@/components/common/Button";
 import { RITUAL_OBJECTS, SESSION_DURATION_SEC } from "@/lib/constants";
 import { scrubMessage, validateMessage } from "@/lib/filters";
@@ -14,6 +15,7 @@ import {
   saveRoomBackground,
   saveMessage,
 } from "@/lib/storage";
+import { createClientId } from "@/lib/id";
 import type { ChatMessage, Room } from "@/lib/types";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
@@ -23,6 +25,12 @@ type FloatingMsg = {
   id: string;
   body: string;
   phase: "visible" | "disappearing";
+  target: MessageTarget;
+};
+
+type MessageTarget = {
+  x: number;
+  y: number;
 };
 
 export function RoomShell({ room }: { room: Room }) {
@@ -33,6 +41,7 @@ export function RoomShell({ room }: { room: Room }) {
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
+  const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [inputBody, setInputBody] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -157,11 +166,12 @@ export function RoomShell({ room }: { room: Room }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showInput]);
 
-  function handleSceneClick() {
+  function handleSceneClick(event: MouseEvent<HTMLElement>) {
     if (showInput) {
       setShowInput(false);
       setInputError(null);
     } else {
+      setMessageTarget(getMessageTarget(event.clientX, event.clientY));
       setShowInput(true);
     }
   }
@@ -184,7 +194,7 @@ export function RoomShell({ room }: { room: Room }) {
 
     const scrubbedBody = scrubMessage(inputBody);
     const message: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: createClientId(),
       roomSlug: room.slug,
       anonymousUserId: anonymousUser.id,
       nickname: anonymousUser.nickname,
@@ -197,7 +207,15 @@ export function RoomShell({ room }: { room: Room }) {
     setDroppedCount((value) => value + 1);
 
     const floatId = message.id;
-    setFloatingMessages((prev) => [...prev, { id: floatId, body: scrubbedBody, phase: "visible" }]);
+    setFloatingMessages((prev) => [
+      ...prev,
+      {
+        id: floatId,
+        body: scrubbedBody,
+        phase: "visible",
+        target: messageTarget ?? getDefaultMessageTarget(),
+      },
+    ]);
 
     setTimeout(() => {
       setFloatingMessages((prev) =>
@@ -211,6 +229,7 @@ export function RoomShell({ room }: { room: Room }) {
 
     setInputBody("");
     setInputError(null);
+    setMessageTarget(null);
     setShowInput(false);
   }
 
@@ -336,8 +355,8 @@ export function RoomShell({ room }: { room: Room }) {
       </div>
 
       {/* Floating messages */}
-      <div className="pointer-events-none absolute bottom-28 left-1/2 z-10 flex w-[min(26rem,90vw)] -translate-x-1/2 flex-col items-center gap-3">
-        {floatingMessages.slice(-3).map((msg) => (
+      <div className="pointer-events-none absolute inset-0 z-10">
+        {floatingMessages.slice(-6).map((msg) => (
           <FloatingMessage key={msg.id} message={msg} />
         ))}
       </div>
@@ -452,38 +471,70 @@ function FloatingMessage({ message }: { message: FloatingMsg }) {
   const isDisappearing = message.phase === "disappearing";
 
   return (
-    <motion.div
-      className="relative rounded-xl px-5 py-3 text-center text-sm font-medium text-white shadow-xl backdrop-blur-sm"
+    <div
+      className="pointer-events-none absolute"
       style={{
-        background: "rgba(12, 12, 12, 0.62)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        maxWidth: "100%",
-        wordBreak: "break-word",
-        overflow: "visible",
+        left: `${message.target.x}px`,
+        maxWidth: "min(22rem, calc(100vw - 2rem))",
+        top: `${message.target.y}px`,
+        transform: "translate(-50%, -50%)",
       }}
-      initial={{ opacity: 0, y: 10, scale: 0.96, filter: "blur(0px)" }}
-      animate={
-        isDisappearing
-          ? { opacity: 0, y: -30, scale: 0.93, filter: "blur(5px)" }
-          : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
-      }
-      transition={
-        isDisappearing
-          ? { duration: 2, ease: "easeIn" }
-          : { duration: 0.35, ease: "easeOut" }
-      }
     >
-      {message.body}
-      {isDisappearing && (
-        <>
-          <span className="ash-crumb ash-crumb-a" style={{ left: "18%", bottom: "-4px" }} />
-          <span className="ash-crumb ash-crumb-b" style={{ left: "48%", bottom: "-3px" }} />
-          <span className="ash-crumb ash-crumb-c" style={{ left: "72%", bottom: "-5px" }} />
-          <span className="ash-crumb ash-crumb-a" style={{ left: "33%", bottom: "-2px", animationDelay: "0.2s" }} />
-        </>
-      )}
-    </motion.div>
+      <motion.div
+        className="relative rounded-xl px-5 py-3 text-center text-sm font-medium text-white shadow-xl backdrop-blur-sm"
+        style={{
+          background: "rgba(12, 12, 12, 0.62)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          maxWidth: "100%",
+          overflow: "visible",
+          wordBreak: "break-word",
+        }}
+        initial={{ opacity: 0, y: 10, scale: 0.96, filter: "blur(0px)" }}
+        animate={
+          isDisappearing
+            ? { opacity: 0, y: -30, scale: 0.93, filter: "blur(5px)" }
+            : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+        }
+        transition={
+          isDisappearing
+            ? { duration: 2, ease: "easeIn" }
+            : { duration: 0.35, ease: "easeOut" }
+        }
+      >
+        {message.body}
+        {isDisappearing && (
+          <>
+            <span className="ash-crumb ash-crumb-a" style={{ left: "18%", bottom: "-4px" }} />
+            <span className="ash-crumb ash-crumb-b" style={{ left: "48%", bottom: "-3px" }} />
+            <span className="ash-crumb ash-crumb-c" style={{ left: "72%", bottom: "-5px" }} />
+            <span className="ash-crumb ash-crumb-a" style={{ left: "33%", bottom: "-2px", animationDelay: "0.2s" }} />
+          </>
+        )}
+      </motion.div>
+    </div>
   );
+}
+
+function getMessageTarget(x: number, y: number): MessageTarget {
+  const horizontalMargin = 24;
+  const verticalMargin = 48;
+
+  return {
+    x: clamp(x, horizontalMargin, window.innerWidth - horizontalMargin),
+    y: clamp(y, verticalMargin, window.innerHeight - verticalMargin),
+  };
+}
+
+function getDefaultMessageTarget(): MessageTarget {
+  return {
+    x: window.innerWidth / 2,
+    y: window.innerHeight * 0.55,
+  };
+}
+
+function clamp(value: number, min: number, max: number) {
+  if (max < min) return min;
+  return Math.min(max, Math.max(min, value));
 }
 
 function resizeRoomBackground(file: File) {

@@ -1,5 +1,6 @@
 import type { AnonymousUser } from "./types";
 import { createNickname } from "./nickname";
+import { createClientId } from "./id";
 
 const STORAGE_KEY = "cigtime.anonymousUser";
 
@@ -32,15 +33,7 @@ export function getOrCreateAnonymousUser(): AnonymousUser {
 
 function createAnonymousUser(): AnonymousUser {
   return {
-    id: `anon_${createId()}`,
+    id: `anon_${createClientId()}`,
     nickname: createNickname(),
   };
-}
-
-function createId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
 }
