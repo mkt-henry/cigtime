@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import { Button } from "@/components/common/Button";
-import { RITUAL_OBJECTS, SESSION_DURATION_SEC } from "@/lib/constants";
+import { GENERAL_CHAT_MESSAGES, RITUAL_OBJECTS, SESSION_DURATION_SEC } from "@/lib/constants";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import {
   clearRoomBackground,
@@ -25,6 +25,7 @@ type FloatingMsg = {
   id: string;
   body: string;
   phase: "visible" | "disappearing";
+  source: "human" | "random";
   target: MessageTarget;
 };
 
@@ -41,6 +42,7 @@ export function RoomShell({ room }: { room: Room }) {
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
+  const [hasHumanMessage, setHasHumanMessage] = useState(false);
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [inputBody, setInputBody] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
@@ -155,6 +157,52 @@ export function RoomShell({ room }: { room: Room }) {
   }, [showInput]);
 
   useEffect(() => {
+    if (showInput || room.isSilent || hasHumanMessage) return;
+
+    let cancelled = false;
+    let timeoutId: number;
+
+    function showRandomMessage() {
+      if (cancelled) return;
+
+      const messageId = createClientId();
+      const body = GENERAL_CHAT_MESSAGES[Math.floor(Math.random() * GENERAL_CHAT_MESSAGES.length)];
+
+      setFloatingMessages((prev) => [
+        ...prev,
+        {
+          id: messageId,
+          body,
+          phase: "visible",
+          source: "random",
+          target: getRandomMessageTarget(),
+        },
+      ]);
+
+      window.setTimeout(() => {
+        setFloatingMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, phase: "disappearing" } : message,
+          ),
+        );
+      }, 4800);
+
+      window.setTimeout(() => {
+        setFloatingMessages((prev) => prev.filter((message) => message.id !== messageId));
+      }, 6800);
+
+      timeoutId = window.setTimeout(showRandomMessage, 3600 + Math.random() * 5200);
+    }
+
+    timeoutId = window.setTimeout(showRandomMessage, 900);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [hasHumanMessage, room.isSilent, showInput]);
+
+  useEffect(() => {
     if (!showInput) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -205,14 +253,16 @@ export function RoomShell({ room }: { room: Room }) {
 
     saveMessage(message);
     setDroppedCount((value) => value + 1);
+    setHasHumanMessage(true);
 
     const floatId = message.id;
     setFloatingMessages((prev) => [
-      ...prev,
+      ...prev.filter((message) => message.source !== "random"),
       {
         id: floatId,
         body: scrubbedBody,
         phase: "visible",
+        source: "human",
         target: messageTarget ?? getDefaultMessageTarget(),
       },
     ]);
@@ -529,6 +579,13 @@ function getDefaultMessageTarget(): MessageTarget {
   return {
     x: window.innerWidth / 2,
     y: window.innerHeight * 0.55,
+  };
+}
+
+function getRandomMessageTarget(): MessageTarget {
+  return {
+    x: clamp(window.innerWidth * (0.2 + Math.random() * 0.6), 28, window.innerWidth - 28),
+    y: clamp(window.innerHeight * (0.24 + Math.random() * 0.48), 56, window.innerHeight - 112),
   };
 }
 

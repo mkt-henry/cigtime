@@ -1,4 +1,4 @@
-import { REACTIONS, SEED_MESSAGES } from "./constants";
+import { GENERAL_CHAT_MESSAGES, REACTIONS } from "./constants";
 import type { ChatMessage, ReactionType } from "./types";
 
 const MESSAGE_KEY = "cigtime.messages";
@@ -95,7 +95,7 @@ function readRoomBackgrounds(): Record<string, string> {
 
 function createSeedMessages(roomSlug: string): ChatMessage[] {
   const now = Date.now();
-  return SEED_MESSAGES.map((body, index) => ({
+  return getRandomSeedMessages(5).map((body, index) => ({
     id: `seed_${roomSlug}_${index}`,
     roomSlug,
     anonymousUserId: `seed_user_${index}`,
@@ -112,4 +112,19 @@ function createSeedMessages(roomSlug: string): ChatMessage[] {
       hug: Array.from({ length: index % 2 }, (_, i) => `seed_hug_${index}_${i}`),
     },
   }));
+}
+
+function getRandomSeedMessages(count: number) {
+  const usedIndexes = new Set<number>();
+  const messages: string[] = [];
+
+  while (messages.length < count && usedIndexes.size < GENERAL_CHAT_MESSAGES.length) {
+    const index = Math.floor(Math.random() * GENERAL_CHAT_MESSAGES.length);
+    if (usedIndexes.has(index)) continue;
+
+    usedIndexes.add(index);
+    messages.push(GENERAL_CHAT_MESSAGES[index]);
+  }
+
+  return messages;
 }

@@ -1,4 +1,5 @@
 import type { ReactionType, RitualObject, Room } from "./types";
+import { GENERAL_CHAT_MESSAGES } from "./randomMessages";
 
 export const SESSION_DURATION_SEC = 180;
 
@@ -81,10 +82,6 @@ export const REPORT_REASONS = [
   "other",
 ] as const;
 
-export const SEED_MESSAGES = [
-  "I just need one quiet minute today.",
-  "I typed thanks and meant none of it.",
-  "The meeting could have been a message.",
-  "I want to be unreachable for exactly three minutes.",
-  "Nothing broke. I'm just tired.",
-];
+export { GENERAL_CHAT_MESSAGES };
+
+export const SEED_MESSAGES = GENERAL_CHAT_MESSAGES;
