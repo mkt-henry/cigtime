@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { SESSION_DURATION_SEC } from "@/lib/constants";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
+import { recordAnalyticsEvent } from "@/lib/server/analytics";
+import { isAnonymousUserId, isShortString, isUuid } from "@/lib/requestValidation";
 
 export async function GET() {
   const supabase = createServiceSupabaseClient();
@@ -14,9 +16,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
 
-  if (!body.anonymousUserId || !body.nickname || !body.roomSlug || !body.objectKey) {
+  if (
+    !body ||
+    !isAnonymousUserId(body.anonymousUserId) ||
+    !isShortString(body.nickname, 40) ||
+    !isShortString(body.roomSlug, 64) ||
+    !isShortString(body.objectKey, 64)
+  ) {
     return NextResponse.json({ error: "Invalid session request." }, { status: 400 });
   }
 
@@ -34,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid session request." }, { status: 400 });
   }
 
-  const durationSec = Number(body.durationSec ?? SESSION_DURATION_SEC);
+  const durationSec = SESSION_DURATION_SEC;
   const endsAt = new Date(Date.now() + durationSec * 1000).toISOString();
 
   const { data: session, error } = await supabase
@@ -55,6 +63,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create session." }, { status: 500 });
   }
 
+  await recordAnalyticsEvent(supabase, {
+    anonymousUserId: body.anonymousUserId,
+    eventName: "session_started",
+    roomSlug: body.roomSlug,
+    sessionId: session.id,
+  });
+
   return NextResponse.json({
     id: session.id,
     anonymousUserId: session.anonymous_user_id,
@@ -69,9 +84,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
 
-  if (!body.id || body.status !== "completed") {
+  if (!body || !isUuid(body.id) || !isAnonymousUserId(body.anonymousUserId) || body.status !== "completed") {
     return NextResponse.json({ error: "Invalid session update." }, { status: 400 });
   }
 
@@ -80,15 +95,28 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "DB not available." }, { status: 500 });
   }
 
-  const { error } = await supabase
+  const { data: completedSession, error } = await supabase
     .from("sessions")
     .update({ status: "completed" })
     .eq("id", body.id)
-    .eq("status", "active");
+    .eq("anonymous_user_id", body.anonymousUserId)
+    .eq("status", "active")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: "Failed to update session." }, { status: 500 });
   }
+
+  if (!completedSession) {
+    return NextResponse.json({ error: "Active session not found." }, { status: 404 });
+  }
+
+  await recordAnalyticsEvent(supabase, {
+    anonymousUserId: body.anonymousUserId,
+    eventName: "session_completed",
+    sessionId: body.id,
+  });
 
   const count = await getTodayCompletedCigaretteCount(supabase);
 

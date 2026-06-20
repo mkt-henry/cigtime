@@ -7,3 +7,4 @@ tsconfig.tsbuildinfo
 .env*.local
 .vercel
 .mcp.json
+supabase/.temp/

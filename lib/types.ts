@@ -30,3 +30,19 @@ export type AnonymousUser = {
   id: string;
   nickname: string;
 };
+
+export type MessageReaction = {
+  anonymous_user_id: string;
+  reaction_type: ReactionType;
+};
+
+export type SharedMessage = {
+  id: string;
+  roomSlug: string;
+  sessionId: string | null;
+  anonymousUserId: string;
+  nickname: string;
+  body: string;
+  createdAt: string;
+  reactions: MessageReaction[];
+};

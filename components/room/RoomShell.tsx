@@ -1,31 +1,29 @@
 "use client";
 
-import { ArrowLeft, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, Flag, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/common/Button";
-import { GENERAL_CHAT_MESSAGES, RITUAL_OBJECTS, SESSION_DURATION_SEC } from "@/lib/constants";
+import { REACTIONS, RITUAL_OBJECTS } from "@/lib/constants";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import {
   clearRoomBackground,
-  getCooldownRemaining,
   getRoomBackground,
   saveRoomBackground,
-  saveMessage,
 } from "@/lib/storage";
-import { createClientId } from "@/lib/id";
-import type { ChatMessage, Room } from "@/lib/types";
+import { trackEvent } from "@/lib/analytics";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import type { ReactionType, Room, SharedMessage } from "@/lib/types";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { RitualObject } from "./RitualObject";
 
 type FloatingMsg = {
-  id: string;
-  body: string;
+  message: SharedMessage;
   phase: "visible" | "disappearing";
-  source: "human" | "random";
   target: MessageTarget;
 };
 
@@ -42,22 +40,154 @@ export function RoomShell({ room }: { room: Room }) {
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
-  const [hasHumanMessage, setHasHumanMessage] = useState(false);
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [inputBody, setInputBody] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [sessionRun, setSessionRun] = useState(0);
   const [todayCigaretteCount, setTodayCigaretteCount] = useState(0);
+  const [onlineCount, setOnlineCount] = useState(1);
+  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "live" | "unavailable">("connecting");
+  const [isSending, setIsSending] = useState(false);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const completedSessionRef = useRef<string | null>(null);
+  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
 
   const selectedObject = RITUAL_OBJECTS.find((object) => object.key === objectKey) ?? RITUAL_OBJECTS[0];
+
+  const addMessage = useCallback((message: SharedMessage) => {
+    setFloatingMessages((current) => {
+      if (current.some((item) => item.message.id === message.id)) return current;
+      return [...current, { message, phase: "visible" as const, target: getRandomMessageTarget() }].slice(-6);
+    });
+  }, []);
+
+  const syncMessages = useCallback(async () => {
+    const response = await fetch(`/api/messages?roomSlug=${encodeURIComponent(room.slug)}`, {
+      cache: "no-store",
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "Messages are unavailable.");
+
+    const latest = ((data.messages ?? []) as SharedMessage[]).slice(-6);
+    setFloatingMessages((current) => {
+      const existing = new Map(current.map((item) => [item.message.id, item]));
+      return latest.map((message) => {
+        const item = existing.get(message.id);
+        return item
+          ? { ...item, message }
+          : { message, phase: "visible" as const, target: getRandomMessageTarget() };
+      });
+    });
+    return data.roomId as string | undefined;
+  }, [room.slug]);
 
   useEffect(() => {
     setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
+
+  useEffect(() => {
+    if (!anonymousUser) return;
+    void trackEvent({
+      anonymousUserId: anonymousUser.id,
+      eventName: "room_entered",
+      roomSlug: room.slug,
+    });
+  }, [anonymousUser, room.slug]);
+
+  useEffect(() => {
+    if (!anonymousUser) return;
+
+    const user = anonymousUser;
+    const supabase = createBrowserSupabaseClient();
+    let disposed = false;
+    let channel: RealtimeChannel | null = null;
+
+    async function connect() {
+      try {
+        const roomId = await syncMessages();
+        if (disposed) return;
+
+        if (!supabase || typeof roomId !== "string") {
+          setConnectionStatus("unavailable");
+          return;
+        }
+
+        channel = supabase
+          .channel(`room:${room.slug}`, { config: { presence: { key: user.id } } })
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              filter: `room_id=eq.${roomId}`,
+              schema: "public",
+              table: "messages",
+            },
+            (payload) => {
+              const row = payload.new as Record<string, string | null>;
+              addMessage({
+                id: String(row.id),
+                roomSlug: room.slug,
+                sessionId: row.session_id,
+                anonymousUserId: String(row.anonymous_user_id),
+                nickname: String(row.nickname),
+                body: String(row.body),
+                createdAt: String(row.created_at),
+                reactions: [],
+              });
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "reactions" },
+            (payload) => {
+              const row = payload.new as Record<string, string>;
+              if (!row.message_id || !REACTIONS.includes(row.reaction_type as ReactionType)) return;
+              setFloatingMessages((current) =>
+                current.map((item) => {
+                  if (item.message.id !== row.message_id) return item;
+                  const reactions = item.message.reactions.filter(
+                    (reaction) => reaction.anonymous_user_id !== row.anonymous_user_id,
+                  );
+                  reactions.push({
+                    anonymous_user_id: row.anonymous_user_id,
+                    reaction_type: row.reaction_type as ReactionType,
+                  });
+                  return { ...item, message: { ...item.message, reactions } };
+                }),
+              );
+            },
+          )
+          .on("broadcast", { event: "refresh" }, () => {
+            void syncMessages();
+          })
+          .on("presence", { event: "sync" }, () => {
+            if (!channel) return;
+            setOnlineCount(Math.max(1, Object.keys(channel.presenceState()).length));
+          })
+          .subscribe(async (status) => {
+            if (status === "SUBSCRIBED" && channel) {
+              setConnectionStatus("live");
+              await channel.track({ joinedAt: new Date().toISOString() });
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setConnectionStatus("unavailable");
+            }
+          });
+        realtimeChannelRef.current = channel;
+      } catch {
+        if (!disposed) setConnectionStatus("unavailable");
+      }
+    }
+
+    void connect();
+
+    return () => {
+      disposed = true;
+      realtimeChannelRef.current = null;
+      if (channel && supabase) void supabase.removeChannel(channel);
+    };
+  }, [addMessage, anonymousUser, room.slug, syncMessages]);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +225,6 @@ export function RoomShell({ room }: { room: Room }) {
         const response = await fetch("/api/sessions", {
           body: JSON.stringify({
             anonymousUserId: user.id,
-            durationSec: SESSION_DURATION_SEC,
             nickname: user.nickname,
             objectKey,
             roomSlug: room.slug,
@@ -123,14 +252,19 @@ export function RoomShell({ room }: { room: Room }) {
   }, [anonymousUser, objectKey, room.slug, sessionRun]);
 
   useEffect(() => {
-    if (!timer.isDone || !activeSessionId || completedSessionRef.current === activeSessionId) return;
+    if (!anonymousUser || !timer.isDone || !activeSessionId || completedSessionRef.current === activeSessionId) return;
 
+    const anonymousUserId = anonymousUser.id;
     completedSessionRef.current = activeSessionId;
 
     async function completeSession() {
       try {
         const response = await fetch("/api/sessions", {
-          body: JSON.stringify({ id: activeSessionId, status: "completed" }),
+          body: JSON.stringify({
+            anonymousUserId,
+            id: activeSessionId,
+            status: "completed",
+          }),
           headers: { "Content-Type": "application/json" },
           method: "PATCH",
         });
@@ -147,7 +281,7 @@ export function RoomShell({ room }: { room: Room }) {
     }
 
     void completeSession();
-  }, [activeSessionId, timer.isDone]);
+  }, [activeSessionId, anonymousUser, timer.isDone]);
 
   useEffect(() => {
     if (showInput) {
@@ -155,52 +289,6 @@ export function RoomShell({ room }: { room: Room }) {
       return () => clearTimeout(t);
     }
   }, [showInput]);
-
-  useEffect(() => {
-    if (showInput || room.isSilent || hasHumanMessage) return;
-
-    let cancelled = false;
-    let timeoutId: number;
-
-    function showRandomMessage() {
-      if (cancelled) return;
-
-      const messageId = createClientId();
-      const body = GENERAL_CHAT_MESSAGES[Math.floor(Math.random() * GENERAL_CHAT_MESSAGES.length)];
-
-      setFloatingMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          body,
-          phase: "visible",
-          source: "random",
-          target: getRandomMessageTarget(),
-        },
-      ]);
-
-      window.setTimeout(() => {
-        setFloatingMessages((prev) =>
-          prev.map((message) =>
-            message.id === messageId ? { ...message, phase: "disappearing" } : message,
-          ),
-        );
-      }, 4800);
-
-      window.setTimeout(() => {
-        setFloatingMessages((prev) => prev.filter((message) => message.id !== messageId));
-      }, 6800);
-
-      timeoutId = window.setTimeout(showRandomMessage, 3600 + Math.random() * 5200);
-    }
-
-    timeoutId = window.setTimeout(showRandomMessage, 900);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [hasHumanMessage, room.isSilent, showInput]);
 
   useEffect(() => {
     if (!showInput) return;
@@ -224,7 +312,7 @@ export function RoomShell({ room }: { room: Room }) {
     }
   }
 
-  function send(event: FormEvent) {
+  async function send(event: FormEvent) {
     event.preventDefault();
     if (!anonymousUser) return;
 
@@ -234,53 +322,106 @@ export function RoomShell({ room }: { room: Room }) {
       return;
     }
 
-    const cooldown = getCooldownRemaining();
-    if (cooldown > 0) {
-      setInputError(`Wait ${cooldown}s before sending again.`);
+    if (!activeSessionId) {
+      setInputError("The shared room is still connecting. Try again in a moment.");
       return;
     }
 
     const scrubbedBody = scrubMessage(inputBody);
-    const message: ChatMessage = {
-      id: createClientId(),
-      roomSlug: room.slug,
-      anonymousUserId: anonymousUser.id,
-      nickname: anonymousUser.nickname,
-      body: scrubbedBody,
-      createdAt: new Date().toISOString(),
-      reactions: { same: [], real: [], oof: [], lol: [], hug: [] },
-    };
-
-    saveMessage(message);
-    setDroppedCount((value) => value + 1);
-    setHasHumanMessage(true);
-
-    const floatId = message.id;
-    setFloatingMessages((prev) => [
-      ...prev.filter((message) => message.source !== "random"),
-      {
-        id: floatId,
-        body: scrubbedBody,
-        phase: "visible",
-        source: "human",
-        target: messageTarget ?? getDefaultMessageTarget(),
-      },
-    ]);
-
-    setTimeout(() => {
-      setFloatingMessages((prev) =>
-        prev.map((m) => (m.id === floatId ? { ...m, phase: "disappearing" } : m)),
-      );
-    }, 5000);
-
-    setTimeout(() => {
-      setFloatingMessages((prev) => prev.filter((m) => m.id !== floatId));
-    }, 7000);
-
-    setInputBody("");
+    setIsSending(true);
     setInputError(null);
-    setMessageTarget(null);
-    setShowInput(false);
+
+    try {
+      const response = await fetch("/api/messages", {
+        body: JSON.stringify({
+          anonymousUserId: anonymousUser.id,
+          body: scrubbedBody,
+          nickname: anonymousUser.nickname,
+          roomSlug: room.slug,
+          sessionId: activeSessionId,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Message could not be sent.");
+
+      const message = { ...data, reactions: [] } as SharedMessage;
+      setFloatingMessages((current) => [
+        ...current.filter((item) => item.message.id !== message.id),
+        {
+          message,
+          phase: "visible" as const,
+          target: messageTarget ?? getDefaultMessageTarget(),
+        },
+      ].slice(-6));
+      setDroppedCount((value) => value + 1);
+      void realtimeChannelRef.current?.send({
+        type: "broadcast",
+        event: "refresh",
+        payload: { messageId: message.id },
+      });
+      setInputBody("");
+      setMessageTarget(null);
+      setShowInput(false);
+    } catch (error) {
+      setInputError(error instanceof Error ? error.message : "Message could not be sent.");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  async function react(messageId: string, reactionType: ReactionType) {
+    if (!anonymousUser) return;
+
+    const applyReaction = (current: FloatingMsg[]) =>
+      current.map((item) => {
+        if (item.message.id !== messageId) return item;
+        const reactions = item.message.reactions.filter(
+          (reaction) => reaction.anonymous_user_id !== anonymousUser.id,
+        );
+        reactions.push({ anonymous_user_id: anonymousUser.id, reaction_type: reactionType });
+        return { ...item, message: { ...item.message, reactions } };
+      });
+
+    setFloatingMessages(applyReaction);
+
+    const response = await fetch("/api/reactions", {
+      body: JSON.stringify({ anonymousUserId: anonymousUser.id, messageId, reactionType }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      setInputError(data?.error ?? "Reaction could not be saved.");
+    } else {
+      void realtimeChannelRef.current?.send({
+        type: "broadcast",
+        event: "refresh",
+        payload: { messageId },
+      });
+    }
+  }
+
+  async function report(messageId: string) {
+    if (!anonymousUser) return;
+    const response = await fetch("/api/reports", {
+      body: JSON.stringify({
+        messageId,
+        reason: "other",
+        reporterAnonymousUserId: anonymousUser.id,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+
+    if (response.ok) {
+      setFloatingMessages((current) => current.filter((item) => item.message.id !== messageId));
+      return;
+    }
+
+    const data = await response.json().catch(() => null);
+    setInputError(data?.error ?? "Report could not be submitted.");
   }
 
   function restart() {
@@ -288,6 +429,13 @@ export function RoomShell({ room }: { room: Room }) {
     setDroppedCount(0);
     setFloatingMessages([]);
     setSessionRun((value) => value + 1);
+    if (anonymousUser) {
+      void trackEvent({
+        anonymousUserId: anonymousUser.id,
+        eventName: "session_restarted",
+        roomSlug: room.slug,
+      });
+    }
   }
 
   async function updateRoomBackground(file: File | undefined) {
@@ -318,9 +466,23 @@ export function RoomShell({ room }: { room: Room }) {
 
   const minutes = Math.floor(timer.remainingSec / 60);
   const seconds = String(timer.remainingSec % 60).padStart(2, "0");
+  const reactionsReceived = floatingMessages
+    .filter((item) => item.message.anonymousUserId === anonymousUser.id)
+    .reduce((total, item) => total + item.message.reactions.length, 0);
 
   return (
-    <main className="fixed inset-0 overflow-hidden" onClick={handleSceneClick}>
+    <main
+      aria-label="Interactive cigtime room. Press Enter to share a thought."
+      className="fixed inset-0 overflow-hidden"
+      onClick={handleSceneClick}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        setMessageTarget(getDefaultMessageTarget());
+        setShowInput(true);
+      }}
+      tabIndex={0}
+    >
       {/* Full screen scene */}
       <div className="absolute inset-0">
         <RitualObject
@@ -353,6 +515,9 @@ export function RoomShell({ room }: { room: Room }) {
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-white/55">{room.name}</p>
             <p className="text-sm font-bold leading-tight text-white drop-shadow">{anonymousUser.nickname}</p>
+            <p className="text-[10px] font-semibold text-white/50">
+              {connectionStatus === "live" ? `${onlineCount} online` : connectionStatus}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -407,7 +572,13 @@ export function RoomShell({ room }: { room: Room }) {
       {/* Floating messages */}
       <div className="pointer-events-none absolute inset-0 z-10">
         {floatingMessages.slice(-6).map((msg) => (
-          <FloatingMessage key={msg.id} message={msg} />
+          <FloatingMessage
+            anonymousUserId={anonymousUser.id}
+            key={msg.message.id}
+            message={msg}
+            onReact={react}
+            onReport={report}
+          />
         ))}
       </div>
 
@@ -429,7 +600,7 @@ export function RoomShell({ room }: { room: Room }) {
               <input
                 autoComplete="off"
                 className="h-11 min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-4 text-sm font-medium text-white placeholder:text-white/40 outline-none backdrop-blur-md transition focus:border-white/50 focus:bg-white/15"
-                disabled={room.isSilent}
+                disabled={room.isSilent || isSending}
                 maxLength={140}
                 onChange={(event) => setInputBody(event.target.value)}
                 placeholder={room.isSilent ? "This room stays silent." : room.placeholder}
@@ -438,7 +609,7 @@ export function RoomShell({ room }: { room: Room }) {
               />
               <button
                 className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-moss text-white transition hover:brightness-110 disabled:opacity-50"
-                disabled={room.isSilent}
+                disabled={room.isSilent || isSending || !activeSessionId}
                 type="submit"
               >
                 <Send size={18} aria-hidden />
@@ -449,7 +620,9 @@ export function RoomShell({ room }: { room: Room }) {
                 {inputError ? (
                   <span className="text-rust">{inputError}</span>
                 ) : (
-                  <span className="text-white/35">anonymous · no history</span>
+                  <span className="text-white/35">
+                    {connectionStatus === "live" ? "anonymous · live room" : "connecting to shared room"}
+                  </span>
                 )}
               </p>
               <p className="text-xs font-medium text-white/35">{inputBody.length}/140</p>
@@ -465,6 +638,9 @@ export function RoomShell({ room }: { room: Room }) {
             <h2 className="text-3xl font-black">That&apos;s your cigtime.</h2>
             <p className="mt-4 text-lg leading-7 text-neutral-700">
               You dropped {droppedCount} thought{droppedCount === 1 ? "" : "s"}.
+            </p>
+            <p className="mt-1 text-sm font-semibold text-neutral-500">
+              {reactionsReceived} reaction{reactionsReceived === 1 ? "" : "s"} received.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button onClick={restart} type="button">
@@ -517,12 +693,24 @@ function SharedAshtray({ count }: { count: number }) {
   );
 }
 
-function FloatingMessage({ message }: { message: FloatingMsg }) {
+function FloatingMessage({
+  message,
+  anonymousUserId,
+  onReact,
+  onReport,
+}: {
+  message: FloatingMsg;
+  anonymousUserId: string;
+  onReact: (messageId: string, reactionType: ReactionType) => void;
+  onReport: (messageId: string) => void;
+}) {
   const isDisappearing = message.phase === "disappearing";
+  const isMine = message.message.anonymousUserId === anonymousUserId;
 
   return (
     <div
-      className="pointer-events-none absolute"
+      className="pointer-events-auto absolute"
+      onClick={(event) => event.stopPropagation()}
       style={{
         left: `${message.target.x}px`,
         maxWidth: "min(22rem, calc(100vw - 2rem))",
@@ -551,7 +739,43 @@ function FloatingMessage({ message }: { message: FloatingMsg }) {
             : { duration: 0.35, ease: "easeOut" }
         }
       >
-        {message.body}
+        <p className="text-[10px] font-bold text-white/55">
+          {isMine ? "you" : message.message.nickname}
+        </p>
+        <p className="mt-1">{message.message.body}</p>
+        {!isMine && (
+          <button
+            aria-label="Report message"
+            className="absolute right-1.5 top-1.5 rounded p-1 text-white/30 transition hover:bg-white/10 hover:text-white/70"
+            onClick={() => onReport(message.message.id)}
+            type="button"
+          >
+            <Flag aria-hidden size={11} />
+          </button>
+        )}
+        <div className="mt-2 flex flex-wrap justify-center gap-1">
+            {REACTIONS.map((reactionType) => {
+              const reactions = message.message.reactions.filter(
+                (reaction) => reaction.reaction_type === reactionType,
+              );
+              const active = reactions.some(
+                (reaction) => reaction.anonymous_user_id === anonymousUserId,
+              );
+              return (
+                <button
+                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${
+                    active ? "bg-moss text-white" : "bg-white/10 text-white/65 hover:bg-white/20"
+                  }`}
+                  key={reactionType}
+                  disabled={isMine}
+                  onClick={() => onReact(message.message.id, reactionType)}
+                  type="button"
+                >
+                  {reactionType}{reactions.length > 0 ? ` ${reactions.length}` : ""}
+                </button>
+              );
+            })}
+          </div>
         {isDisappearing && (
           <>
             <span className="ash-crumb ash-crumb-a" style={{ left: "18%", bottom: "-4px" }} />

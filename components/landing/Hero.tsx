@@ -29,10 +29,10 @@ export function Hero() {
               </LinkButton>
               <LinkButton
                 className="border-white/45 bg-white/20 text-white backdrop-blur-md hover:border-white"
-                href="/rooms"
+                href="/reactions"
                 variant="secondary"
               >
-                Choose room
+                See reactions
                 <ArrowRight size={18} aria-hidden />
               </LinkButton>
             </div>
@@ -50,7 +50,7 @@ export function Hero() {
       <section className="border-y border-line bg-[#f5f5f2]/90 px-4 py-8 sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
           <Preview title="Objects" items={RITUAL_OBJECTS.map((object) => object.name)} />
-          <Preview title="Rooms" items={ROOMS.map((room) => room.name)} />
+          <Preview title="Shared room" items={[ROOMS[0].name]} />
         </div>
       </section>
     </main>

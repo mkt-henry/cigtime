@@ -7,8 +7,11 @@ export function SiteNav() {
         cigtime
       </Link>
       <nav className="flex items-center gap-1 text-sm font-medium text-neutral-700">
-        <Link className="rounded-md px-3 py-2 hover:bg-white/70" href="/rooms">
-          Rooms
+        <Link className="rounded-md px-3 py-2 hover:bg-white/70" href="/room/rooftop">
+          Rooftop
+        </Link>
+        <Link className="rounded-md px-3 py-2 hover:bg-white/70" href="/reactions">
+          Reactions
         </Link>
         <Link className="rounded-md px-3 py-2 hover:bg-white/70" href="/guidelines">
           Guidelines
