@@ -1,84 +1,125 @@
-const CHAT_TOPICS = [
-  "오늘 하루",
-  "지금 이 순간",
-  "퇴근길 생각",
-  "아침부터 시작된 일",
-  "방금 본 알림",
-  "읽다 만 메시지",
-  "괜히 미뤄둔 일",
-  "책상 위 컵",
-  "냉장고 안 반찬",
-  "엘리베이터 기다리는 시간",
-  "비 오는 소리",
-  "창밖 풍경",
-  "지하철 안 공기",
-  "버스 놓친 기분",
-  "잠깐 쉬는 틈",
-  "끝나지 않는 대화",
-  "혼자 먹는 저녁",
-  "늦은 밤 공기",
-  "출근 전 마음",
-  "월요일의 속도",
-  "금요일 오후",
-  "주말 계획",
-  "씻기 전 침대",
-  "정리 안 된 방",
-  "충전기 찾는 시간",
-  "이어폰 한쪽",
-  "배달 도착 알림",
-  "카페 구석자리",
-  "마감 전 분위기",
-  "갑자기 온 전화",
-  "안 읽은 메일",
-  "비어 있는 캘린더",
-  "가득 찬 캘린더",
-  "느린 와이파이",
-  "따뜻한 물 한 잔",
-  "식은 커피",
-  "새로 산 양말",
-  "계속 밀린 빨래",
-  "어색한 침묵",
-  "그냥 지나간 말",
+// Ambient floating messages shown in a room when no real person has spoken yet.
+// The product targets English- and Spanish-speaking users, so the pool is
+// localized and selected at runtime from the visitor's browser language.
+
+const EN_TOPICS = [
+  "This whole day",
+  "That message I never sent",
+  "The meeting that ran long",
+  "My inbox right now",
+  "The thing I keep putting off",
+  "This Monday",
+  "Friday afternoon",
+  "The coffee going cold",
+  "That call out of nowhere",
+  "The reply I'm still drafting",
+  "Late night air",
+  "The to-do list",
+  "This quiet minute",
+  "The group chat",
+  "Dinner alone tonight",
+  "The deadline creeping up",
+  "My phone buzzing again",
+  "The weekend I had planned",
+  "Everyone acting fine",
+  "The slow wifi",
+  "That one notification",
+  "The commute home",
+  "This empty calendar",
+  "This packed calendar",
+  "The laundry I keep ignoring",
 ] as const;
 
-const CHAT_COMMENTS = [
-  "은근히 오래 남네",
-  "오늘따라 무겁다",
-  "생각보다 괜찮다",
-  "별일 아닌데 신경 쓰인다",
-  "잠깐 꺼두고 싶다",
-  "말로 하면 더 이상할 것 같다",
-  "그냥 흘려보내는 중이다",
-  "조금 웃기고 조금 슬프다",
-  "괜히 큰일처럼 느껴진다",
-  "이상하게 마음에 걸린다",
-  "다들 아무렇지 않은 척한다",
-  "나만 느린 것 같다",
-  "일단 모른 척하고 있다",
-  "생각보다 빨리 지나간다",
-  "잠깐만 멈췄으면 좋겠다",
-  "기대보다 조용하다",
-  "괜히 말 걸고 싶어진다",
-  "이 정도면 충분히 피곤하다",
-  "진짜 귀찮게 굴러간다",
-  "존나 별거 아닌데 힘 빠진다",
-  "씨발 소리 나올 만큼 답답하다",
-  "개빡세게 느껴진다",
-  "어쩐지 타이밍이 안 맞다",
-  "별말 없이 넘어가고 싶다",
-  "오늘은 그냥 그런 날이다",
+const EN_COMMENTS = [
+  "it just keeps sitting on me",
+  "heavier than it should be",
+  "honestly not as bad as I feared",
+  "small thing, still stuck on it",
+  "I just want to mute it for a second",
+  "it sounds worse if I say it out loud",
+  "I'm letting it drift off",
+  "a little funny, a little sad",
+  "it feels bigger than it is",
+  "weirdly it won't leave me alone",
+  "everyone's pretending it's fine",
+  "feels like I'm the slow one",
+  "I'm ignoring it for now",
+  "it passes faster than I think",
+  "I just want it to pause",
+  "quieter than I expected",
+  "kind of want to talk to someone",
+  "this alone is enough to drain me",
+  "it's grinding on me",
+  "such a small thing and I'm out of energy",
 ] as const;
 
-function buildGeneralChatMessages() {
-  const messages = CHAT_TOPICS.flatMap((topic) =>
-    CHAT_COMMENTS.map((comment) => `${topic}, ${comment}.`),
-  );
+const ES_TOPICS = [
+  "Todo este día",
+  "Ese mensaje que nunca mandé",
+  "La reunión que se alargó",
+  "Mi bandeja de entrada ahora",
+  "Eso que sigo posponiendo",
+  "Este lunes",
+  "El viernes por la tarde",
+  "El café que se enfría",
+  "Esa llamada de la nada",
+  "La respuesta que sigo escribiendo",
+  "El aire de la madrugada",
+  "La lista de pendientes",
+  "Este minuto de calma",
+  "El grupo de chat",
+  "La cena solo esta noche",
+  "La fecha de entrega encima",
+  "El teléfono vibrando otra vez",
+  "El fin de semana que había planeado",
+  "Todos fingiendo que están bien",
+  "El wifi lento",
+  "Esa notificación",
+  "El camino a casa",
+  "Este calendario vacío",
+  "Este calendario lleno",
+  "La ropa que sigo ignorando",
+] as const;
 
-  if (messages.length !== 1000) {
-    throw new Error(`Expected 1000 random chat messages, got ${messages.length}.`);
-  }
+const ES_COMMENTS = [
+  "se me queda encima",
+  "pesa más de lo que debería",
+  "la verdad, no tan mal como temía",
+  "una tontería y sigo dándole vueltas",
+  "solo quiero silenciarlo un segundo",
+  "suena peor si lo digo en voz alta",
+  "lo estoy dejando ir",
+  "un poco gracioso, un poco triste",
+  "se siente más grande de lo que es",
+  "qué raro, no me deja en paz",
+  "todos fingen que no pasa nada",
+  "siento que el lento soy yo",
+  "lo estoy ignorando por ahora",
+  "pasa más rápido de lo que creo",
+  "solo quiero que se detenga",
+  "más silencioso de lo que esperaba",
+  "me dan ganas de hablar con alguien",
+  "solo con esto ya quedo agotado",
+  "me está desgastando",
+  "una cosa mínima y ya no tengo energía",
+] as const;
 
-  return messages;
+function buildMessages(
+  topics: readonly string[],
+  comments: readonly string[],
+): readonly string[] {
+  return topics.flatMap((topic) => comments.map((comment) => `${topic}, ${comment}.`));
 }
 
-export const GENERAL_CHAT_MESSAGES = buildGeneralChatMessages();
+export const EN_CHAT_MESSAGES = buildMessages(EN_TOPICS, EN_COMMENTS);
+export const ES_CHAT_MESSAGES = buildMessages(ES_TOPICS, ES_COMMENTS);
+
+// English is the default pool (used for SSR and seed data).
+export const GENERAL_CHAT_MESSAGES = EN_CHAT_MESSAGES;
+
+// Pick the ambient pool that matches the visitor's browser language.
+export function getAmbientMessages(lang?: string): readonly string[] {
+  const code = (lang ?? "en").toLowerCase();
+  if (code.startsWith("es")) return ES_CHAT_MESSAGES;
+  return EN_CHAT_MESSAGES;
+}

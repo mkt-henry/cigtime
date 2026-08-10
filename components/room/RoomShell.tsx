@@ -8,6 +8,7 @@ import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/common/Button";
 import { REACTIONS, RITUAL_OBJECTS } from "@/lib/constants";
+import { ShareCard } from "./ShareCard";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import {
   clearRoomBackground,
@@ -37,6 +38,8 @@ export function RoomShell({ room }: { room: Room }) {
   const timer = useSessionTimer();
   const [objectKey, setObjectKey] = useState(RITUAL_OBJECTS[0].key);
   const [droppedCount, setDroppedCount] = useState(0);
+  const [lastThought, setLastThought] = useState<string | null>(null);
+  const [shareLang, setShareLang] = useState<"en" | "es">("en");
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
@@ -86,6 +89,11 @@ export function RoomShell({ room }: { room: Room }) {
   useEffect(() => {
     setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
+
+  useEffect(() => {
+    const lang = navigator.language?.toLowerCase() ?? "en";
+    setShareLang(lang.startsWith("es") ? "es" : "en");
+  }, []);
 
   useEffect(() => {
     if (!anonymousUser) return;
@@ -356,6 +364,7 @@ export function RoomShell({ room }: { room: Room }) {
         },
       ].slice(-6));
       setDroppedCount((value) => value + 1);
+      setLastThought(scrubbedBody);
       void realtimeChannelRef.current?.send({
         type: "broadcast",
         event: "refresh",
@@ -427,6 +436,7 @@ export function RoomShell({ room }: { room: Room }) {
   function restart() {
     timer.restart();
     setDroppedCount(0);
+    setLastThought(null);
     setFloatingMessages([]);
     setSessionRun((value) => value + 1);
     if (anonymousUser) {
@@ -642,17 +652,20 @@ export function RoomShell({ room }: { room: Room }) {
             <p className="mt-1 text-sm font-semibold text-neutral-500">
               {reactionsReceived} reaction{reactionsReceived === 1 ? "" : "s"} received.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={restart} type="button">
-                <RotateCcw size={18} aria-hidden />
-                Take another
-              </Button>
-              <Link
-                className="inline-flex h-11 items-center justify-center rounded-md border border-line px-4 text-sm font-semibold hover:border-ink"
-                href="/"
-              >
-                Leave lighter
-              </Link>
+            <div className="mt-6 flex flex-col gap-3">
+              <ShareCard thought={lastThought} lang={shareLang} />
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button onClick={restart} type="button">
+                  <RotateCcw size={18} aria-hidden />
+                  Take another
+                </Button>
+                <Link
+                  className="inline-flex h-11 items-center justify-center rounded-md border border-line px-4 text-sm font-semibold hover:border-ink"
+                  href="/"
+                >
+                  Leave lighter
+                </Link>
+              </div>
             </div>
           </div>
         </section>
