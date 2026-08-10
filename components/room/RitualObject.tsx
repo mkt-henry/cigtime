@@ -89,12 +89,15 @@ function ObjectVisual({
   onFilterHoldStart?: () => void;
   progress: number;
 }) {
-  const fade = 1 - progress * 0.6;
-
   if (objectKey === "candy") {
+    // The candy itself shrinks while the wrapper stays put.
+    const scale = 1 - progress * 0.72;
     return (
-      <div className="float-slow relative h-32 w-56" style={{ opacity: fade }}>
-        <div className="absolute left-9 top-10 h-14 w-36 rounded-full bg-rust shadow-soft" />
+      <div className="float-slow relative h-32 w-56">
+        <div
+          className="absolute left-9 top-10 h-14 w-36 origin-center rounded-full bg-rust shadow-soft transition-transform duration-700"
+          style={{ transform: `scale(${scale})` }}
+        />
         <div className="absolute left-0 top-12 h-10 w-14 rotate-[-18deg] rounded-md bg-white" />
         <div className="absolute right-0 top-12 h-10 w-14 rotate-[18deg] rounded-md bg-white" />
       </div>
@@ -102,33 +105,68 @@ function ObjectVisual({
   }
 
   if (objectKey === "incense") {
+    // The stick burns down from the top and leaves ash behind it.
+    const stickWidth = Math.max(6, 112 * (1 - progress));
+    const ashWidth = Math.min(46, progress * 60);
     return (
-      <div className="relative h-48 w-48" style={{ opacity: fade }}>
-        <div className="smoke-thread absolute left-24 top-4 h-32 w-10 rounded-full border-l-2 border-moss/45" />
-        <div className="absolute bottom-10 left-16 h-2 w-28 rotate-[-24deg] rounded-full bg-ink" />
+      <div className="relative h-48 w-48">
+        <div
+          className="smoke-thread absolute left-24 top-4 h-32 w-10 rounded-full border-l-2 border-moss/45"
+          style={{ opacity: 0.4 + progress * 0.5 }}
+        />
+        <div className="absolute bottom-10 left-16 flex rotate-[-24deg] items-center">
+          <div className="h-2 rounded-l-full bg-ink transition-all duration-700" style={{ width: `${stickWidth}px` }} />
+          <div
+            className="relative h-2 rounded-r-full bg-neutral-400 transition-all duration-700"
+            style={{ width: `${ashWidth}px` }}
+          >
+            <span className="absolute right-[-4px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_10px_rgba(242,166,90,0.7)]" />
+          </div>
+        </div>
         <div className="absolute bottom-5 left-10 h-3 w-36 rounded-full bg-neutral-300" />
       </div>
     );
   }
 
   if (objectKey === "coffee") {
+    // The cup empties and the steam thins out with it.
+    const liquidHeight = Math.max(0, 56 * (1 - progress));
+    const steamOpacity = Math.max(0, 1 - progress * 1.2);
     return (
-      <div className="relative h-48 w-48" style={{ opacity: fade }}>
-        <div className="smoke-thread absolute left-16 top-2 h-28 w-8 rounded-full border-l-2 border-neutral-500/40" />
-        <div className="smoke-thread absolute left-24 top-8 h-24 w-8 rounded-full border-r-2 border-moss/35 [animation-delay:1.2s]" />
-        <div className="absolute bottom-10 left-10 h-24 w-28 rounded-b-3xl rounded-t-md border-4 border-ink bg-white" />
+      <div className="relative h-48 w-48">
+        <div
+          className="smoke-thread absolute left-16 top-2 h-28 w-8 rounded-full border-l-2 border-neutral-500/40"
+          style={{ opacity: steamOpacity }}
+        />
+        <div
+          className="smoke-thread absolute left-24 top-8 h-24 w-8 rounded-full border-r-2 border-moss/35 [animation-delay:1.2s]"
+          style={{ opacity: steamOpacity }}
+        />
+        <div className="absolute bottom-10 left-10 h-24 w-28 overflow-hidden rounded-b-3xl rounded-t-md border-4 border-ink bg-white">
+          <div
+            className="absolute inset-x-0 bottom-0 bg-rust transition-all duration-700"
+            style={{ height: `${liquidHeight}px` }}
+          />
+        </div>
         <div className="absolute bottom-20 right-4 h-12 w-12 rounded-full border-4 border-ink" />
-        <div className="absolute bottom-28 left-14 h-4 rounded-full bg-rust" style={{ width: `${70 - progress * 45}px` }} />
       </div>
     );
   }
 
   if (objectKey === "candle") {
+    // Wax melts down and the flame gets smaller with it.
+    const waxHeight = Math.max(10, 112 * (1 - progress * 0.78));
+    const flameScale = 1 - progress * 0.55;
     return (
-      <div className="relative h-48 w-48" style={{ opacity: fade }}>
-        <div className="pulse-soft absolute left-[78px] top-8 h-16 w-9 rounded-t-full bg-ember" />
-        <div className="absolute bottom-8 left-14 h-28 w-20 rounded-md bg-white shadow-soft" />
-        <div className="absolute bottom-8 left-14 h-28 w-20 rounded-md border border-line" />
+      <div className="relative h-48 w-48">
+        <div
+          className="pulse-soft absolute left-[78px] h-16 w-9 origin-bottom rounded-t-full bg-ember transition-all duration-700"
+          style={{ bottom: `${32 + waxHeight}px`, transform: `scale(${flameScale})` }}
+        />
+        <div
+          className="absolute bottom-8 left-14 w-20 rounded-md border border-line bg-white shadow-soft transition-all duration-700"
+          style={{ height: `${waxHeight}px` }}
+        />
       </div>
     );
   }
@@ -140,86 +178,6 @@ function ObjectVisual({
       onFilterHoldStart={onFilterHoldStart}
       progress={progress}
     />
-  );
-}
-
-export function LegacyBurningCigarette({
-  isAccelerating,
-  onFilterHoldEnd,
-  onFilterHoldStart,
-  progress,
-}: {
-  isAccelerating?: boolean;
-  onFilterHoldEnd?: () => void;
-  onFilterHoldStart?: () => void;
-  progress: number;
-}) {
-  const paperWidth = Math.max(14, 132 * (1 - progress));
-  const ashWidth = Math.min(52, 8 + progress * 54);
-  const smokeOpacity = (0.45 + progress * 0.45) * (isAccelerating ? 1.12 : 1);
-  const emberScale = (1 - progress * 0.25) * (isAccelerating ? 1.28 : 1);
-
-  return (
-    <div className="relative z-10 h-full w-full">
-      <div
-        className="smoke-thread absolute left-[68%] top-[8%] h-[36%] w-10 rounded-full border-l-2 border-white/70"
-        style={{ opacity: smokeOpacity }}
-      />
-      <div
-        className="smoke-thread absolute left-[75%] top-[14%] h-[32%] w-12 rounded-full border-r-2 border-moss/45 [animation-delay:1s]"
-        style={{ opacity: smokeOpacity }}
-      />
-      {progress > 0.24 ? (
-        <div
-          className="smoke-thread absolute left-[62%] top-[18%] h-[28%] w-9 rounded-full border-l-2 border-rust/35 [animation-delay:1.8s]"
-          style={{ opacity: smokeOpacity }}
-        />
-      ) : null}
-
-      <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 rotate-[-8deg] items-center drop-shadow-xl">
-        <button
-          aria-label="Pull the cigarette filter"
-          className="h-7 w-[46px] rounded-l-full border border-neutral-700 bg-gradient-to-r from-[#9b5f37] to-[#d4a06d] outline-none transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ember disabled:cursor-default"
-          disabled={progress >= 1}
-          onBlur={onFilterHoldEnd}
-          onKeyDown={(event) => {
-            if (event.key === " " || event.key === "Enter") {
-              event.preventDefault();
-              onFilterHoldStart?.();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === " " || event.key === "Enter") {
-              event.preventDefault();
-              onFilterHoldEnd?.();
-            }
-          }}
-          onPointerCancel={onFilterHoldEnd}
-          onPointerDown={onFilterHoldStart}
-          onPointerLeave={onFilterHoldEnd}
-          onPointerUp={onFilterHoldEnd}
-          title="Hold"
-          type="button"
-        />
-        <div
-          className="h-7 border-y border-neutral-700 bg-gradient-to-r from-white to-[#f1efe6] transition-all duration-700"
-          style={{ width: `${paperWidth}px` }}
-        />
-        <div
-          className="relative h-7 rounded-r-full border border-neutral-700 bg-gradient-to-r from-neutral-500 to-neutral-300 transition-all duration-700"
-          style={{ width: `${ashWidth}px` }}
-        >
-          <span
-            className="absolute right-[-8px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_14px_rgba(242,166,90,0.62)]"
-            style={{ transform: `translateY(-50%) scale(${emberScale})` }}
-          />
-          {isAccelerating ? (
-            <span className="absolute right-[-16px] top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border border-ember/60 shadow-[0_0_24px_rgba(242,166,90,0.65)]" />
-          ) : null}
-          <span className="absolute right-2 top-1 h-1.5 w-6 rounded-full bg-white/45" />
-        </div>
-      </div>
-    </div>
   );
 }
 

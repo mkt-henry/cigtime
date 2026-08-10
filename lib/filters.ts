@@ -1,24 +1,28 @@
+// Explicit .ts extension so `node --test lib/filters.test.ts` can resolve it.
+import { t, type Lang } from "./i18n.ts";
+
 const URL_PATTERN = /https?:\/\/|www\./i;
 const EMAIL_PATTERN = /[\w.+-]+@[\w-]+\.[\w.-]+/i;
 const PHONE_PATTERN = /(?:\+?\d[\s.-]?){8,}/;
 
-export function validateMessage(body: string) {
+export function validateMessage(body: string, lang: Lang = "en") {
+  const copy = t(lang);
   const trimmed = body.trim();
 
   if (trimmed.length < 1) {
-    return "Write at least one character.";
+    return copy.errorEmpty;
   }
 
   if (trimmed.length > 140) {
-    return "Keep it under 140 characters.";
+    return copy.errorTooLong;
   }
 
   if (URL_PATTERN.test(trimmed)) {
-    return "Links are blocked in the MVP.";
+    return copy.errorLink;
   }
 
   if (EMAIL_PATTERN.test(trimmed) || PHONE_PATTERN.test(trimmed)) {
-    return "Personal contact info is blocked.";
+    return copy.errorContact;
   }
 
   return null;

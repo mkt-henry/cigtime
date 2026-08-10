@@ -1,9 +1,13 @@
 import { ArrowRight, Cigarette, Clock3, Flame, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { LinkButton } from "@/components/common/Button";
 import { RITUAL_OBJECTS, ROOMS } from "@/lib/constants";
+import { pickLang, t } from "@/lib/i18n";
 
-export function Hero() {
+export async function Hero() {
+  const copy = t(pickLang((await headers()).get("accept-language")));
+
   return (
     <main>
       <section className="relative min-h-[calc(100vh-84px)] overflow-hidden bg-[#d8ddd3] px-4 pb-8 pt-8 sm:px-6 lg:pb-10">
@@ -12,45 +16,45 @@ export function Hero() {
           <div className="max-w-2xl">
             <p className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/25 px-3 py-1 text-sm font-semibold text-white shadow-sm backdrop-blur-md">
               <Sparkles size={16} aria-hidden />
-              3 minute anonymous room
+              {copy.heroBadge}
             </p>
             <h1 className="text-6xl font-black leading-[0.9] tracking-normal text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.28)] sm:text-8xl">
               cigtime
             </h1>
             <p className="mt-7 max-w-xl text-2xl font-semibold leading-tight text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.3)] sm:text-3xl">
-              Take your cigtime.
+              {copy.heroTaglineTop}
               <br />
-              A place to let it out.
+              {copy.heroTaglineBottom}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <LinkButton className="shadow-[0_14px_34px_rgba(0,0,0,0.2)]" href="/room/rooftop">
+              <LinkButton className="shadow-[0_14px_34px_rgba(0,0,0,0.2)]" href="/rooms">
                 <Cigarette size={18} aria-hidden />
-                Let it out
+                {copy.heroCta}
               </LinkButton>
               <LinkButton
                 className="border-white/45 bg-white/20 text-white backdrop-blur-md hover:border-white"
                 href="/reactions"
                 variant="secondary"
               >
-                See reactions
+                {copy.heroReactions}
                 <ArrowRight size={18} aria-hidden />
               </LinkButton>
             </div>
           </div>
 
           <div className="flex max-w-2xl flex-wrap gap-3 text-sm font-semibold text-white/85">
-            <HeroMetric icon={<Clock3 size={16} aria-hidden />} label="03:00 room" />
-            <HeroMetric icon={<Flame size={16} aria-hidden />} label="private by default" />
-            <HeroMetric className="hidden sm:inline-flex" icon={<Cigarette size={16} aria-hidden />} label="drop it and leave" />
+            <HeroMetric icon={<Clock3 size={16} aria-hidden />} label={copy.heroMetricRoom} />
+            <HeroMetric icon={<Flame size={16} aria-hidden />} label={copy.heroMetricPrivate} />
+            <HeroMetric className="hidden sm:inline-flex" icon={<Cigarette size={16} aria-hidden />} label={copy.heroMetricDrop} />
           </div>
         </div>
-        <FloatingThought />
+        <FloatingThought thought={copy.heroThought} />
       </section>
 
       <section className="border-y border-line bg-[#f5f5f2]/90 px-4 py-8 sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
-          <Preview title="Objects" items={RITUAL_OBJECTS.map((object) => object.name)} />
-          <Preview title="Shared room" items={[ROOMS[0].name]} />
+          <Preview title={copy.heroObjects} items={RITUAL_OBJECTS.map((object) => object.name)} />
+          <Preview title={copy.heroRooms} items={ROOMS.map((room) => room.name)} />
         </div>
       </section>
     </main>
@@ -124,10 +128,10 @@ function Preview({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function FloatingThought() {
+function FloatingThought({ thought }: { thought: string }) {
   return (
     <div className="float-slow pointer-events-none absolute right-[7%] top-[22%] z-10 hidden max-w-[18rem] rounded-xl border border-white/15 bg-black/35 px-5 py-3 text-sm font-medium leading-6 text-white shadow-2xl backdrop-blur-md sm:block">
-      I just need one quiet minute today.
+      {thought}
       <p className="mt-2 text-xs font-bold text-white/55">same 12 / oof 4 / hug 2</p>
     </div>
   );

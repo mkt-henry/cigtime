@@ -1,5 +1,4 @@
 import type { ReactionType, RitualObject, Room } from "./types";
-import { GENERAL_CHAT_MESSAGES } from "./randomMessages";
 
 export const SESSION_DURATION_SEC = 180;
 
@@ -8,31 +7,41 @@ export const ROOMS: Room[] = [
     slug: "rooftop",
     name: "The Rooftop",
     description: "A default open room for short resets.",
+    descriptionEs: "La sala abierta por defecto para un respiro corto.",
     placeholder: "Let it out...",
+    placeholderEs: "Suéltalo...",
   },
   {
     slug: "let-it-out",
     name: "Let It Out",
     description: "Drop the feeling and leave it there.",
+    descriptionEs: "Suelta lo que sientes y déjalo ahí.",
     placeholder: "What do you need to get out?",
+    placeholderEs: "¿Qué necesitas sacar?",
   },
   {
     slug: "unsent-replies",
     name: "Unsent Replies",
     description: "Say the reply you never sent.",
+    descriptionEs: "Di la respuesta que nunca enviaste.",
     placeholder: "Say the reply you never sent.",
+    placeholderEs: "Di la respuesta que nunca enviaste.",
   },
   {
     slug: "tiny-rants",
     name: "Tiny Rants",
     description: "Small complaints with small consequences.",
+    descriptionEs: "Quejas pequeñas con consecuencias pequeñas.",
     placeholder: "What's your tiny rant?",
+    placeholderEs: "¿Cuál es tu queja de hoy?",
   },
   {
     slug: "silent",
     name: "Silent Cigtime",
     description: "A quiet room with no posting.",
+    descriptionEs: "Una sala tranquila donde no se escribe.",
     placeholder: "Quiet room. No words needed.",
+    placeholderEs: "Sala tranquila. No hacen falta palabras.",
     isSilent: true,
   },
 ];
@@ -82,6 +91,4 @@ export const REPORT_REASONS = [
   "other",
 ] as const;
 
-export { GENERAL_CHAT_MESSAGES };
-
-export const SEED_MESSAGES = GENERAL_CHAT_MESSAGES;
+export type ReportReason = (typeof REPORT_REASONS)[number];

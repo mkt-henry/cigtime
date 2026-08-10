@@ -1,15 +1,18 @@
 "use client";
 
-import { ArrowLeft, Flag, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/common/Button";
-import { REACTIONS, RITUAL_OBJECTS } from "@/lib/constants";
+import { REACTIONS, RITUAL_OBJECTS, type ReportReason } from "@/lib/constants";
 import { ShareCard } from "./ShareCard";
 import { scrubMessage, validateMessage } from "@/lib/filters";
+import { t, type Lang } from "@/lib/i18n";
+import { createNickname } from "@/lib/nickname";
+import { getAmbientMessages } from "@/lib/randomMessages";
 import {
   clearRoomBackground,
   getRoomBackground,
@@ -19,8 +22,13 @@ import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ReactionType, Room, SharedMessage } from "@/lib/types";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
+import { useLang } from "@/hooks/useLang";
+import { useMutedUsers } from "@/hooks/useMutedUsers";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
+import { MessageMenu } from "./MessageMenu";
 import { RitualObject } from "./RitualObject";
+
+const AMBIENT_PREFIX = "ambient_";
 
 type FloatingMsg = {
   message: SharedMessage;
@@ -36,10 +44,12 @@ type MessageTarget = {
 export function RoomShell({ room }: { room: Room }) {
   const anonymousUser = useAnonymousUser();
   const timer = useSessionTimer();
+  const lang = useLang();
+  const copy = t(lang);
+  const { mutedUsers, mute } = useMutedUsers();
   const [objectKey, setObjectKey] = useState(RITUAL_OBJECTS[0].key);
   const [droppedCount, setDroppedCount] = useState(0);
   const [lastThought, setLastThought] = useState<string | null>(null);
-  const [shareLang, setShareLang] = useState<"en" | "es">("en");
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
@@ -62,7 +72,8 @@ export function RoomShell({ room }: { room: Room }) {
   const addMessage = useCallback((message: SharedMessage) => {
     setFloatingMessages((current) => {
       if (current.some((item) => item.message.id === message.id)) return current;
-      return [...current, { message, phase: "visible" as const, target: getRandomMessageTarget() }].slice(-6);
+      const real = current.filter((item) => !item.message.id.startsWith(AMBIENT_PREFIX));
+      return [...real, { message, phase: "visible" as const, target: getRandomMessageTarget() }].slice(-6);
     });
   }, []);
 
@@ -75,6 +86,11 @@ export function RoomShell({ room }: { room: Room }) {
 
     const latest = ((data.messages ?? []) as SharedMessage[]).slice(-6);
     setFloatingMessages((current) => {
+      if (latest.length === 0) {
+        // Nobody has spoken yet — keep the room warm with ambient thoughts.
+        const ambient = current.filter((item) => item.message.id.startsWith(AMBIENT_PREFIX));
+        return ambient.length ? ambient : createAmbientMessages(room.slug);
+      }
       const existing = new Map(current.map((item) => [item.message.id, item]));
       return latest.map((message) => {
         const item = existing.get(message.id);
@@ -89,11 +105,6 @@ export function RoomShell({ room }: { room: Room }) {
   useEffect(() => {
     setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
-
-  useEffect(() => {
-    const lang = navigator.language?.toLowerCase() ?? "en";
-    setShareLang(lang.startsWith("es") ? "es" : "en");
-  }, []);
 
   useEffect(() => {
     if (!anonymousUser) return;
@@ -184,7 +195,9 @@ export function RoomShell({ room }: { room: Room }) {
           });
         realtimeChannelRef.current = channel;
       } catch {
-        if (!disposed) setConnectionStatus("unavailable");
+        if (disposed) return;
+        setConnectionStatus("unavailable");
+        setFloatingMessages((current) => (current.length ? current : createAmbientMessages(room.slug)));
       }
     }
 
@@ -324,14 +337,14 @@ export function RoomShell({ room }: { room: Room }) {
     event.preventDefault();
     if (!anonymousUser) return;
 
-    const validationError = validateMessage(inputBody);
+    const validationError = validateMessage(inputBody, lang);
     if (validationError) {
       setInputError(validationError);
       return;
     }
 
     if (!activeSessionId) {
-      setInputError("The shared room is still connecting. Try again in a moment.");
+      setInputError(copy.errorConnecting);
       return;
     }
 
@@ -352,11 +365,13 @@ export function RoomShell({ room }: { room: Room }) {
         method: "POST",
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Message could not be sent.");
+      if (!response.ok) throw new Error(data.error ?? copy.errorSend);
 
       const message = { ...data, reactions: [] } as SharedMessage;
       setFloatingMessages((current) => [
-        ...current.filter((item) => item.message.id !== message.id),
+        ...current.filter(
+          (item) => item.message.id !== message.id && !item.message.id.startsWith(AMBIENT_PREFIX),
+        ),
         {
           message,
           phase: "visible" as const,
@@ -374,7 +389,7 @@ export function RoomShell({ room }: { room: Room }) {
       setMessageTarget(null);
       setShowInput(false);
     } catch (error) {
-      setInputError(error instanceof Error ? error.message : "Message could not be sent.");
+      setInputError(error instanceof Error ? error.message : copy.errorSend);
     } finally {
       setIsSending(false);
     }
@@ -402,7 +417,7 @@ export function RoomShell({ room }: { room: Room }) {
     });
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      setInputError(data?.error ?? "Reaction could not be saved.");
+      setInputError(data?.error ?? copy.errorReaction);
     } else {
       void realtimeChannelRef.current?.send({
         type: "broadcast",
@@ -412,12 +427,12 @@ export function RoomShell({ room }: { room: Room }) {
     }
   }
 
-  async function report(messageId: string) {
+  async function report(messageId: string, reason: ReportReason) {
     if (!anonymousUser) return;
     const response = await fetch("/api/reports", {
       body: JSON.stringify({
         messageId,
-        reason: "other",
+        reason,
         reporterAnonymousUserId: anonymousUser.id,
       }),
       headers: { "Content-Type": "application/json" },
@@ -430,7 +445,7 @@ export function RoomShell({ room }: { room: Room }) {
     }
 
     const data = await response.json().catch(() => null);
-    setInputError(data?.error ?? "Report could not be submitted.");
+    setInputError(data?.error ?? copy.errorReport);
   }
 
   function restart() {
@@ -469,13 +484,16 @@ export function RoomShell({ room }: { room: Room }) {
   if (!anonymousUser) {
     return (
       <main className="grid min-h-screen place-items-center px-4">
-        <p className="rounded-md border border-line bg-white px-4 py-3 font-semibold">Opening room...</p>
+        <p className="rounded-md border border-line bg-white px-4 py-3 font-semibold">{copy.opening}</p>
       </main>
     );
   }
 
   const minutes = Math.floor(timer.remainingSec / 60);
   const seconds = String(timer.remainingSec % 60).padStart(2, "0");
+  const visibleMessages = floatingMessages.filter(
+    (item) => !mutedUsers.includes(item.message.anonymousUserId),
+  );
   const reactionsReceived = floatingMessages
     .filter((item) => item.message.anonymousUserId === anonymousUser.id)
     .reduce((total, item) => total + item.message.reactions.length, 0);
@@ -516,7 +534,7 @@ export function RoomShell({ room }: { room: Room }) {
       >
         <div className="flex items-center gap-2">
           <Link
-            aria-label="Back to rooms"
+            aria-label={copy.backToRooms}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
             href="/rooms"
           >
@@ -526,7 +544,11 @@ export function RoomShell({ room }: { room: Room }) {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-white/55">{room.name}</p>
             <p className="text-sm font-bold leading-tight text-white drop-shadow">{anonymousUser.nickname}</p>
             <p className="text-[10px] font-semibold text-white/50">
-              {connectionStatus === "live" ? `${onlineCount} online` : connectionStatus}
+              {connectionStatus === "live"
+                ? copy.online(onlineCount)
+                : connectionStatus === "connecting"
+                  ? copy.statusConnecting
+                  : copy.statusUnavailable}
             </p>
           </div>
         </div>
@@ -550,7 +572,7 @@ export function RoomShell({ room }: { room: Room }) {
             type="file"
           />
           <button
-            aria-label="Upload room background"
+            aria-label={copy.uploadBackground}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
             onClick={() => backgroundInputRef.current?.click()}
             type="button"
@@ -559,7 +581,7 @@ export function RoomShell({ room }: { room: Room }) {
           </button>
           {roomBackground && (
             <button
-              aria-label="Remove room background"
+              aria-label={copy.removeBackground}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
               onClick={removeRoomBackground}
               type="button"
@@ -581,11 +603,13 @@ export function RoomShell({ room }: { room: Room }) {
 
       {/* Floating messages */}
       <div className="pointer-events-none absolute inset-0 z-10">
-        {floatingMessages.slice(-6).map((msg) => (
+        {visibleMessages.slice(-6).map((msg) => (
           <FloatingMessage
             anonymousUserId={anonymousUser.id}
             key={msg.message.id}
+            lang={lang}
             message={msg}
+            onMute={mute}
             onReact={react}
             onReport={report}
           />
@@ -593,9 +617,9 @@ export function RoomShell({ room }: { room: Room }) {
       </div>
 
       {/* Tap hint */}
-      {!showInput && floatingMessages.length === 0 && (
+      {!showInput && visibleMessages.length === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-7 z-10 text-center">
-          <p className="text-xs font-medium text-white/30">tap to share a thought</p>
+          <p className="text-xs font-medium text-white/30">{copy.tapHint}</p>
         </div>
       )}
 
@@ -613,7 +637,13 @@ export function RoomShell({ room }: { room: Room }) {
                 disabled={room.isSilent || isSending}
                 maxLength={140}
                 onChange={(event) => setInputBody(event.target.value)}
-                placeholder={room.isSilent ? "This room stays silent." : room.placeholder}
+                placeholder={
+                  room.isSilent
+                    ? copy.silentPlaceholder
+                    : lang === "es"
+                      ? room.placeholderEs
+                      : room.placeholder
+                }
                 ref={chatInputRef}
                 value={inputBody}
               />
@@ -631,7 +661,7 @@ export function RoomShell({ room }: { room: Room }) {
                   <span className="text-rust">{inputError}</span>
                 ) : (
                   <span className="text-white/35">
-                    {connectionStatus === "live" ? "anonymous · live room" : "connecting to shared room"}
+                    {connectionStatus === "live" ? copy.liveRoom : copy.connectingRoom}
                   </span>
                 )}
               </p>
@@ -645,25 +675,23 @@ export function RoomShell({ room }: { room: Room }) {
       {timer.isDone && (
         <section className="fixed inset-0 z-40 grid place-items-center bg-ink/45 px-4">
           <div className="w-full max-w-md rounded-lg border border-line bg-white p-6 shadow-soft">
-            <h2 className="text-3xl font-black">That&apos;s your cigtime.</h2>
-            <p className="mt-4 text-lg leading-7 text-neutral-700">
-              You dropped {droppedCount} thought{droppedCount === 1 ? "" : "s"}.
-            </p>
+            <h2 className="text-3xl font-black">{copy.endTitle}</h2>
+            <p className="mt-4 text-lg leading-7 text-neutral-700">{copy.endDropped(droppedCount)}</p>
             <p className="mt-1 text-sm font-semibold text-neutral-500">
-              {reactionsReceived} reaction{reactionsReceived === 1 ? "" : "s"} received.
+              {copy.endReactions(reactionsReceived)}
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <ShareCard thought={lastThought} lang={shareLang} />
+              <ShareCard thought={lastThought} lang={lang} />
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button onClick={restart} type="button">
                   <RotateCcw size={18} aria-hidden />
-                  Take another
+                  {copy.takeAnother}
                 </Button>
                 <Link
                   className="inline-flex h-11 items-center justify-center rounded-md border border-line px-4 text-sm font-semibold hover:border-ink"
                   href="/"
                 >
-                  Leave lighter
+                  {copy.leaveLighter}
                 </Link>
               </div>
             </div>
@@ -707,18 +735,23 @@ function SharedAshtray({ count }: { count: number }) {
 }
 
 function FloatingMessage({
-  message,
   anonymousUserId,
+  lang,
+  message,
+  onMute,
   onReact,
   onReport,
 }: {
-  message: FloatingMsg;
   anonymousUserId: string;
+  lang: Lang;
+  message: FloatingMsg;
+  onMute: (anonymousUserId: string) => void;
   onReact: (messageId: string, reactionType: ReactionType) => void;
-  onReport: (messageId: string) => void;
+  onReport: (messageId: string, reason: ReportReason) => void;
 }) {
   const isDisappearing = message.phase === "disappearing";
   const isMine = message.message.anonymousUserId === anonymousUserId;
+  const isAmbient = message.message.id.startsWith(AMBIENT_PREFIX);
 
   return (
     <div
@@ -756,17 +789,15 @@ function FloatingMessage({
           {isMine ? "you" : message.message.nickname}
         </p>
         <p className="mt-1">{message.message.body}</p>
-        {!isMine && (
-          <button
-            aria-label="Report message"
-            className="absolute right-1.5 top-1.5 rounded p-1 text-white/30 transition hover:bg-white/10 hover:text-white/70"
-            onClick={() => onReport(message.message.id)}
-            type="button"
-          >
-            <Flag aria-hidden size={11} />
-          </button>
+        {!isMine && !isAmbient && (
+          <MessageMenu
+            lang={lang}
+            onMute={() => onMute(message.message.anonymousUserId)}
+            onReport={(reason) => onReport(message.message.id, reason)}
+          />
         )}
-        <div className="mt-2 flex flex-wrap justify-center gap-1">
+        {!isAmbient && (
+          <div className="mt-2 flex flex-wrap justify-center gap-1">
             {REACTIONS.map((reactionType) => {
               const reactions = message.message.reactions.filter(
                 (reaction) => reaction.reaction_type === reactionType,
@@ -789,6 +820,7 @@ function FloatingMessage({
               );
             })}
           </div>
+        )}
         {isDisappearing && (
           <>
             <span className="ash-crumb ash-crumb-a" style={{ left: "18%", bottom: "-4px" }} />
@@ -800,6 +832,28 @@ function FloatingMessage({
       </motion.div>
     </div>
   );
+}
+
+// Decorative thoughts shown while the room is empty. They carry the AMBIENT_PREFIX
+// so they stay out of reactions, reports, and the DB.
+function createAmbientMessages(roomSlug: string): FloatingMsg[] {
+  const pool = getAmbientMessages(typeof navigator === "undefined" ? "en" : navigator.language);
+  const now = Date.now();
+
+  return Array.from({ length: 3 }, (_, index) => ({
+    message: {
+      id: `${AMBIENT_PREFIX}${index}`,
+      roomSlug,
+      sessionId: null,
+      anonymousUserId: `${AMBIENT_PREFIX}${index}`,
+      nickname: createNickname(),
+      body: pool[Math.floor(Math.random() * pool.length)],
+      createdAt: new Date(now - (index + 1) * 24_000).toISOString(),
+      reactions: [],
+    },
+    phase: "visible" as const,
+    target: getRandomMessageTarget(),
+  }));
 }
 
 function getMessageTarget(x: number, y: number): MessageTarget {

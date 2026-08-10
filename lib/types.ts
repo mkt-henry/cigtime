@@ -2,7 +2,9 @@ export type Room = {
   slug: string;
   name: string;
   description: string;
+  descriptionEs: string;
   placeholder: string;
+  placeholderEs: string;
   isSilent?: boolean;
 };
 
@@ -14,17 +16,6 @@ export type RitualObject = {
 };
 
 export type ReactionType = "same" | "real" | "oof" | "lol" | "hug";
-
-export type ChatMessage = {
-  id: string;
-  roomSlug: string;
-  anonymousUserId: string;
-  nickname: string;
-  body: string;
-  createdAt: string;
-  reactions: Record<ReactionType, string[]>;
-  reported?: boolean;
-};
 
 export type AnonymousUser = {
   id: string;
