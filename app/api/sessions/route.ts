@@ -118,9 +118,34 @@ export async function PATCH(request: Request) {
     sessionId: body.id,
   });
 
-  const count = await getTodayCompletedCigaretteCount(supabase);
+  const [count, sessionReactionCount] = await Promise.all([
+    getTodayCompletedCigaretteCount(supabase),
+    getSessionReactionCount(supabase, body.id),
+  ]);
 
-  return NextResponse.json({ todayCigaretteCount: count });
+  return NextResponse.json({ todayCigaretteCount: count, sessionReactionCount });
+}
+
+// Every reaction the session's messages collected, including messages that
+// already scrolled out of the room view.
+async function getSessionReactionCount(
+  supabase: NonNullable<ReturnType<typeof createServiceSupabaseClient>>,
+  sessionId: string,
+) {
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("id")
+    .eq("session_id", sessionId);
+
+  const messageIds = (messages ?? []).map((message) => message.id);
+  if (messageIds.length === 0) return 0;
+
+  const { count } = await supabase
+    .from("reactions")
+    .select("id", { count: "exact", head: true })
+    .in("message_id", messageIds);
+
+  return count ?? 0;
 }
 
 function getKstDayBoundsUtc() {

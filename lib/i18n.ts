@@ -68,6 +68,20 @@ const EN = {
   errorSend: "Message could not be sent.",
   errorReaction: "Reaction could not be saved.",
   errorReport: "Report could not be submitted.",
+
+  metaDescription: "Take your cigtime. A place to let it out.",
+
+  statsTitle: "Product pulse",
+  statsSubtitle: "Unique browsers that entered a room or acted inside it, by KST day.",
+  statsEmpty: "No active-room events yet.",
+  statsError: "DAU could not be loaded.",
+
+  reactionsTitle: "What came back",
+  reactionsSubtitle: "Reactions to thoughts left by this browser.",
+  reactionsLoading: "Loading reactions...",
+  reactionsError: "Reactions could not be loaded.",
+  reactionsEmpty: "No reactions yet.",
+  reactionsCta: "Drop a thought in The Rooftop",
 };
 
 type Copy = typeof EN;
@@ -133,6 +147,20 @@ const ES: Copy = {
   errorSend: "No se pudo enviar el mensaje.",
   errorReaction: "No se pudo guardar la reacción.",
   errorReport: "No se pudo enviar el reporte.",
+
+  metaDescription: "Tómate tu cigtime. Un lugar para desahogarte.",
+
+  statsTitle: "Pulso del producto",
+  statsSubtitle: "Navegadores únicos que entraron en una sala o actuaron dentro, por día KST.",
+  statsEmpty: "Todavía no hay actividad en las salas.",
+  statsError: "No se pudo cargar el DAU.",
+
+  reactionsTitle: "Lo que volvió",
+  reactionsSubtitle: "Reacciones a los pensamientos que dejó este navegador.",
+  reactionsLoading: "Cargando reacciones...",
+  reactionsError: "No se pudieron cargar las reacciones.",
+  reactionsEmpty: "Todavía no hay reacciones.",
+  reactionsCta: "Suelta un pensamiento en The Rooftop",
 };
 
 const COPY: Record<Lang, Copy> = { en: EN, es: ES };

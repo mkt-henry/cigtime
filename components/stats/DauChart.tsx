@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/hooks/useLang";
+import { t } from "@/lib/i18n";
 
 type DauPoint = { day: string; dau: number };
 
 export function DauChart() {
+  const copy = t(useLang());
   const [points, setPoints] = useState<DauPoint[]>([]);
   const [failed, setFailed] = useState(false);
 
@@ -22,8 +25,8 @@ export function DauChart() {
     return () => controller.abort();
   }, []);
 
-  if (failed) return <p className="text-rust">DAU could not be loaded.</p>;
-  if (points.length === 0) return <p className="text-neutral-500">No active-room events yet.</p>;
+  if (failed) return <p className="text-rust">{copy.statsError}</p>;
+  if (points.length === 0) return <p className="text-neutral-500">{copy.statsEmpty}</p>;
 
   const max = Math.max(1, ...points.map((point) => Number(point.dau)));
   return (

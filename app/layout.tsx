@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
-import { pickLang } from "@/lib/i18n";
+import { pickLang, t } from "@/lib/i18n";
+import { SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsTracker } from "@/components/common/AnalyticsTracker";
@@ -17,10 +18,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "cigtime",
-  description: "Take your cigtime. A place to let it out.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = t(pickLang((await headers()).get("accept-language")));
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: "cigtime",
+    description: copy.metaDescription,
+    openGraph: {
+      title: "cigtime",
+      description: copy.metaDescription,
+      siteName: "cigtime",
+      type: "website",
+      url: SITE_URL,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "cigtime",
+      description: copy.metaDescription,
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

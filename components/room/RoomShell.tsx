@@ -59,6 +59,7 @@ export function RoomShell({ room }: { room: Room }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [sessionRun, setSessionRun] = useState(0);
   const [todayCigaretteCount, setTodayCigaretteCount] = useState(0);
+  const [sessionReactionCount, setSessionReactionCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState(1);
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "live" | "unavailable">("connecting");
   const [isSending, setIsSending] = useState(false);
@@ -296,6 +297,9 @@ export function RoomShell({ room }: { room: Room }) {
         if (typeof data.todayCigaretteCount === "number") {
           setTodayCigaretteCount(data.todayCigaretteCount);
         }
+        if (typeof data.sessionReactionCount === "number") {
+          setSessionReactionCount(data.sessionReactionCount);
+        }
       } catch {
         // Shared ashtray is best-effort.
       }
@@ -324,6 +328,7 @@ export function RoomShell({ room }: { room: Room }) {
   }, [showInput]);
 
   function handleSceneClick(event: MouseEvent<HTMLElement>) {
+    if (room.isSilent) return;
     if (showInput) {
       setShowInput(false);
       setInputError(null);
@@ -452,6 +457,7 @@ export function RoomShell({ room }: { room: Room }) {
     timer.restart();
     setDroppedCount(0);
     setLastThought(null);
+    setSessionReactionCount(null);
     setFloatingMessages([]);
     setSessionRun((value) => value + 1);
     if (anonymousUser) {
@@ -494,9 +500,11 @@ export function RoomShell({ room }: { room: Room }) {
   const visibleMessages = floatingMessages.filter(
     (item) => !mutedUsers.includes(item.message.anonymousUserId),
   );
-  const reactionsReceived = floatingMessages
-    .filter((item) => item.message.anonymousUserId === anonymousUser.id)
-    .reduce((total, item) => total + item.message.reactions.length, 0);
+  const reactionsReceived =
+    sessionReactionCount ??
+    floatingMessages
+      .filter((item) => item.message.anonymousUserId === anonymousUser.id)
+      .reduce((total, item) => total + item.message.reactions.length, 0);
 
   return (
     <main
@@ -504,6 +512,7 @@ export function RoomShell({ room }: { room: Room }) {
       className="fixed inset-0 overflow-hidden"
       onClick={handleSceneClick}
       onKeyDown={(event) => {
+        if (room.isSilent) return;
         if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
         setMessageTarget(getDefaultMessageTarget());
@@ -540,10 +549,10 @@ export function RoomShell({ room }: { room: Room }) {
           >
             <ArrowLeft size={18} aria-hidden />
           </Link>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/55">{room.name}</p>
+          <div className="rounded-md bg-black/30 px-2.5 py-1 backdrop-blur-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/65">{room.name}</p>
             <p className="text-sm font-bold leading-tight text-white drop-shadow">{anonymousUser.nickname}</p>
-            <p className="text-[10px] font-semibold text-white/50">
+            <p className="text-[10px] font-semibold text-white/60">
               {connectionStatus === "live"
                 ? copy.online(onlineCount)
                 : connectionStatus === "connecting"
@@ -619,7 +628,9 @@ export function RoomShell({ room }: { room: Room }) {
       {/* Tap hint */}
       {!showInput && visibleMessages.length === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-7 z-10 text-center">
-          <p className="text-xs font-medium text-white/30">{copy.tapHint}</p>
+          <p className="text-xs font-medium text-white/30">
+            {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
+          </p>
         </div>
       )}
 
@@ -852,13 +863,23 @@ function createAmbientMessages(roomSlug: string): FloatingMsg[] {
       reactions: [],
     },
     phase: "visible" as const,
-    target: getRandomMessageTarget(),
+    // Spread them out instead of stacking three random targets on top of each other.
+    target: getMessageTarget(
+      window.innerWidth * (index % 2 === 0 ? 0.32 : 0.68),
+      window.innerHeight * (0.28 + index * 0.2),
+    ),
   }));
 }
 
+// Bubbles are centered on their target and can be up to 22rem wide, so the
+// margin has to cover half a bubble or the text runs off screen.
+function getHorizontalMargin() {
+  return Math.min(184, window.innerWidth * 0.4);
+}
+
 function getMessageTarget(x: number, y: number): MessageTarget {
-  const horizontalMargin = 24;
-  const verticalMargin = 48;
+  const horizontalMargin = getHorizontalMargin();
+  const verticalMargin = 72;
 
   return {
     x: clamp(x, horizontalMargin, window.innerWidth - horizontalMargin),
@@ -874,9 +895,14 @@ function getDefaultMessageTarget(): MessageTarget {
 }
 
 function getRandomMessageTarget(): MessageTarget {
+  const horizontalMargin = getHorizontalMargin();
   return {
-    x: clamp(window.innerWidth * (0.2 + Math.random() * 0.6), 28, window.innerWidth - 28),
-    y: clamp(window.innerHeight * (0.24 + Math.random() * 0.48), 56, window.innerHeight - 112),
+    x: clamp(
+      window.innerWidth * (0.2 + Math.random() * 0.6),
+      horizontalMargin,
+      window.innerWidth - horizontalMargin,
+    ),
+    y: clamp(window.innerHeight * (0.24 + Math.random() * 0.48), 96, window.innerHeight - 140),
   };
 }
 

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
+import { useLang } from "@/hooks/useLang";
+import { t } from "@/lib/i18n";
 import type { ReactionType } from "@/lib/types";
 
 type InboxMessage = {
@@ -14,6 +16,7 @@ type InboxMessage = {
 };
 
 export function ReactionInbox() {
+  const copy = t(useLang());
   const anonymousUser = useAnonymousUser();
   const [messages, setMessages] = useState<InboxMessage[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -46,14 +49,14 @@ export function ReactionInbox() {
     };
   }, [anonymousUser]);
 
-  if (status === "loading") return <p className="text-neutral-500">Loading reactions...</p>;
-  if (status === "error") return <p className="text-rust">Reactions could not be loaded.</p>;
+  if (status === "loading") return <p className="text-neutral-500">{copy.reactionsLoading}</p>;
+  if (status === "error") return <p className="text-rust">{copy.reactionsError}</p>;
   if (messages.length === 0) {
     return (
       <div className="rounded-lg border border-line bg-white/80 p-6">
-        <p className="font-semibold text-neutral-600">No reactions yet.</p>
+        <p className="font-semibold text-neutral-600">{copy.reactionsEmpty}</p>
         <Link className="mt-4 inline-block font-bold text-moss hover:underline" href="/room/rooftop">
-          Drop a thought in The Rooftop
+          {copy.reactionsCta}
         </Link>
       </div>
     );

@@ -160,11 +160,12 @@ function ObjectVisual({
     return (
       <div className="relative h-48 w-48">
         <div
-          className="pulse-soft absolute left-[78px] h-16 w-9 origin-bottom rounded-t-full bg-ember transition-all duration-700"
-          style={{ bottom: `${32 + waxHeight}px`, transform: `scale(${flameScale})` }}
+          className="pulse-soft absolute left-[86px] h-10 w-5 origin-bottom rounded-full bg-ember shadow-[0_0_28px_rgba(242,166,90,0.6)] transition-all duration-700"
+          style={{ bottom: `${34 + waxHeight}px`, transform: `scale(${flameScale})` }}
         />
+        <div className="absolute left-[94px] h-3 w-[3px] bg-neutral-600" style={{ bottom: `${32 + waxHeight}px` }} />
         <div
-          className="absolute bottom-8 left-14 w-20 rounded-md border border-line bg-white shadow-soft transition-all duration-700"
+          className="absolute bottom-8 left-[74px] w-12 rounded-sm border border-line bg-white shadow-soft transition-all duration-700"
           style={{ height: `${waxHeight}px` }}
         />
       </div>
