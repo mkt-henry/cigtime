@@ -80,6 +80,73 @@ a {
   }
 }
 
+.star {
+  animation: star-twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+
+.cloud-drift {
+  animation: cloud-drift 80s linear infinite;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-30vw);
+  }
+  to {
+    transform: translateX(110vw);
+  }
+}
+
+.window-flicker {
+  animation: window-flicker 5s ease-in-out infinite;
+}
+
+@keyframes window-flicker {
+  0%,
+  100% {
+    opacity: var(--lit, 0.7);
+  }
+  46% {
+    opacity: var(--lit, 0.7);
+  }
+  50% {
+    opacity: 0.2;
+  }
+  54% {
+    opacity: var(--lit, 0.7);
+  }
+}
+
+.vent-puff {
+  animation: vent-puff 7s ease-out infinite;
+}
+
+@keyframes vent-puff {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  20% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(26px, -150px) scale(2.6);
+  }
+}
+
 .smoke-thread {
   animation: smoke-rise 5s ease-in-out infinite;
 }
