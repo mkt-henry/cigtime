@@ -10,10 +10,10 @@ export async function Hero() {
 
   return (
     <main>
-      <section className="relative min-h-[calc(100vh-84px)] overflow-hidden bg-[#d8ddd3] px-4 pb-8 pt-8 sm:px-6 lg:pb-10">
+      <section className="relative min-h-[100svh] overflow-hidden bg-[#d8ddd3] px-4 pb-8 pt-24 sm:px-6 lg:pb-10">
         <RooftopBackdrop />
-        <div className="relative z-10 mx-auto flex min-h-[calc(100vh-132px)] w-full max-w-6xl flex-col justify-between gap-12 pb-10 pt-2 lg:pt-8">
-          <div className="max-w-2xl">
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-8rem)] w-full max-w-6xl flex-col justify-between gap-12 pb-10 pt-2 lg:pt-8">
+          <div className="fade-up max-w-2xl">
             <p className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/25 px-3 py-1 text-sm font-semibold text-white shadow-sm backdrop-blur-md">
               <Sparkles size={16} aria-hidden />
               {copy.heroBadge}
@@ -65,7 +65,7 @@ function RooftopBackdrop() {
   return (
     <div aria-hidden className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(180deg,#7faebf_0%,#d7a979_52%,#4e5b58_100%)]" />
-      <div className="absolute left-[14%] top-[17%] h-24 w-24 rounded-full bg-ember shadow-[0_0_90px_rgba(242,166,90,0.78)]" />
+      <div className="absolute right-[10%] top-[14%] h-20 w-20 rounded-full sm:right-[34%] sm:top-[17%] sm:h-24 sm:w-24 bg-ember shadow-[0_0_90px_rgba(242,166,90,0.78)]" />
       <div className="absolute inset-x-0 bottom-[6.7rem] h-40">
         {Array.from({ length: 9 }, (_, index) => (
           <HeroBuilding key={index} index={index} />

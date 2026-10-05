@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { SESSION_DURATION_SEC } from "@/lib/constants";
 
 const FAST_MULTIPLIER = 4;
+// Visuals ease between values with CSS transitions, so ~7 updates/sec reads as smooth
+// while avoiding a full room re-render on every animation frame.
+const PROGRESS_STEP = 0.0015;
 
 export function useSessionTimer(durationSec = SESSION_DURATION_SEC) {
   const durationMs = durationSec * 1000;
@@ -26,6 +29,7 @@ export function useSessionTimer(durationSec = SESSION_DURATION_SEC) {
     setIsAccelerating(false);
 
     let prevDisplaySec = durationSec;
+    let prevProgress = 0;
     let rafId: number;
 
     function frame(now: number) {
@@ -38,7 +42,10 @@ export function useSessionTimer(durationSec = SESSION_DURATION_SEC) {
       const p = state.elapsedMs / durationMs;
       const rem = Math.max(0, Math.ceil((durationMs - state.elapsedMs) / 1000));
 
-      setProgress(p);
+      if (Math.abs(p - prevProgress) >= PROGRESS_STEP || p >= 1) {
+        prevProgress = p;
+        setProgress(p);
+      }
       if (rem !== prevDisplaySec) {
         prevDisplaySec = rem;
         setRemainingSec(rem);

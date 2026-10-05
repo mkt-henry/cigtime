@@ -39,6 +39,11 @@ const EN = {
   backToRooms: "Back to rooms",
   uploadBackground: "Upload room background",
   removeBackground: "Remove room background",
+  roomAria: "Interactive cigtime room. Press Enter to share a thought.",
+  objectLabel: "Ritual object",
+  sendThought: "Send thought",
+  you: "you",
+  ashtrayLabel: (count: number) => `${count} cigarettes finished today`,
 
   endTitle: "That's your cigtime.",
   endDropped: (count: number) =>
@@ -70,6 +75,12 @@ const EN = {
   errorReport: "Report could not be submitted.",
 
   metaDescription: "Take your cigtime. A place to let it out.",
+
+  notFoundTitle: "Nothing here.",
+  notFoundBody: "This page burned out. The rooms are still open.",
+  errorTitle: "Something went wrong.",
+  errorBody: "Take a breath and try again.",
+  retry: "Try again",
 
   statsTitle: "Product pulse",
   statsSubtitle: "Unique browsers that entered a room or acted inside it, by KST day.",
@@ -118,6 +129,11 @@ const ES: Copy = {
   backToRooms: "Volver a las salas",
   uploadBackground: "Subir fondo de la sala",
   removeBackground: "Quitar fondo de la sala",
+  roomAria: "Sala interactiva de cigtime. Pulsa Enter para soltar un pensamiento.",
+  objectLabel: "Objeto del ritual",
+  sendThought: "Enviar pensamiento",
+  you: "tú",
+  ashtrayLabel: (count: number) => `${count} cigarrillos terminados hoy`,
 
   endTitle: "Ese fue tu cigtime.",
   endDropped: (count: number) =>
@@ -149,6 +165,12 @@ const ES: Copy = {
   errorReport: "No se pudo enviar el reporte.",
 
   metaDescription: "Tómate tu cigtime. Un lugar para desahogarte.",
+
+  notFoundTitle: "Aquí no hay nada.",
+  notFoundBody: "Esta página se consumió. Las salas siguen abiertas.",
+  errorTitle: "Algo salió mal.",
+  errorBody: "Respira e inténtalo de nuevo.",
+  retry: "Reintentar",
 
   statsTitle: "Pulso del producto",
   statsSubtitle: "Navegadores únicos que entraron en una sala o actuaron dentro, por día KST.",

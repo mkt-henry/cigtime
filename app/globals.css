@@ -47,6 +47,39 @@ a {
   text-decoration: none;
 }
 
+:focus-visible {
+  outline: 2px solid #2f6f5f;
+  outline-offset: 2px;
+}
+
+.fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .smoke-thread {
   animation: smoke-rise 5s ease-in-out infinite;
 }

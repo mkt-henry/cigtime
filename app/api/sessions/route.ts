@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { SESSION_DURATION_SEC } from "@/lib/constants";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
@@ -12,7 +12,11 @@ export async function GET() {
 
   const count = await getTodayCompletedCigaretteCount(supabase);
 
-  return NextResponse.json({ todayCigaretteCount: count });
+  // The shared ashtray is decorative; a short edge cache absorbs one request per room entry.
+  return NextResponse.json(
+    { todayCigaretteCount: count },
+    { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } },
+  );
 }
 
 export async function POST(request: Request) {
@@ -63,12 +67,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create session." }, { status: 500 });
   }
 
-  await recordAnalyticsEvent(supabase, {
-    anonymousUserId: body.anonymousUserId,
-    eventName: "session_started",
-    roomSlug: body.roomSlug,
-    sessionId: session.id,
-  });
+  after(() =>
+    recordAnalyticsEvent(supabase, {
+      anonymousUserId: body.anonymousUserId,
+      eventName: "session_started",
+      roomSlug: body.roomSlug,
+      sessionId: session.id,
+    }),
+  );
 
   return NextResponse.json({
     id: session.id,
@@ -112,11 +118,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Active session not found." }, { status: 404 });
   }
 
-  await recordAnalyticsEvent(supabase, {
-    anonymousUserId: body.anonymousUserId,
-    eventName: "session_completed",
-    sessionId: body.id,
-  });
+  after(() =>
+    recordAnalyticsEvent(supabase, {
+      anonymousUserId: body.anonymousUserId,
+      eventName: "session_completed",
+      sessionId: body.id,
+    }),
+  );
 
   const [count, sessionReactionCount] = await Promise.all([
     getTodayCompletedCigaretteCount(supabase),

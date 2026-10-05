@@ -123,6 +123,7 @@ export function RoomShell({ room }: { room: Room }) {
     const supabase = createBrowserSupabaseClient();
     let disposed = false;
     let channel: RealtimeChannel | null = null;
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 
     async function connect() {
       try {
@@ -180,7 +181,9 @@ export function RoomShell({ room }: { room: Room }) {
             },
           )
           .on("broadcast", { event: "refresh" }, () => {
-            void syncMessages();
+            // Every client receives every refresh; coalesce bursts into one fetch.
+            clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => void syncMessages(), 1200);
           })
           .on("presence", { event: "sync" }, () => {
             if (!channel) return;
@@ -206,6 +209,7 @@ export function RoomShell({ room }: { room: Room }) {
 
     return () => {
       disposed = true;
+      clearTimeout(refreshTimer);
       realtimeChannelRef.current = null;
       if (channel && supabase) void supabase.removeChannel(channel);
     };
@@ -508,7 +512,7 @@ export function RoomShell({ room }: { room: Room }) {
 
   return (
     <main
-      aria-label="Interactive cigtime room. Press Enter to share a thought."
+      aria-label={copy.roomAria}
       className="fixed inset-0 overflow-hidden"
       onClick={handleSceneClick}
       onKeyDown={(event) => {
@@ -534,11 +538,11 @@ export function RoomShell({ room }: { room: Room }) {
         />
       </div>
 
-      <SharedAshtray count={todayCigaretteCount} />
+      <SharedAshtray count={todayCigaretteCount} label={copy.ashtrayLabel(todayCigaretteCount)} />
 
       {/* Top HUD */}
       <div
-        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-3"
+        className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-4 py-3"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2">
@@ -561,9 +565,11 @@ export function RoomShell({ room }: { room: Room }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+          <div className="order-last flex items-center gap-2 sm:order-first">
           <select
-            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none"
+            aria-label={copy.objectLabel}
+            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             onChange={(event) => setObjectKey(event.target.value)}
             value={objectKey}
           >
@@ -598,7 +604,12 @@ export function RoomShell({ room }: { room: Room }) {
               <Trash2 size={15} aria-hidden />
             </button>
           )}
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-black/30 px-3 py-2 font-mono text-sm font-black text-white backdrop-blur-sm">
+          </div>
+          <div
+            aria-label={`${minutes}:${seconds}`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-black/30 px-3 py-2 font-mono text-sm font-black tabular-nums text-white backdrop-blur-sm"
+            role="timer"
+          >
             <Timer size={14} aria-hidden />
             {minutes}:{seconds}
           </div>
@@ -628,7 +639,7 @@ export function RoomShell({ room }: { room: Room }) {
       {/* Tap hint */}
       {!showInput && visibleMessages.length === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-7 z-10 text-center">
-          <p className="text-xs font-medium text-white/30">
+          <p className="text-xs font-medium text-white/60 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
           </p>
         </div>
@@ -659,6 +670,7 @@ export function RoomShell({ room }: { room: Room }) {
                 value={inputBody}
               />
               <button
+                aria-label={copy.sendThought}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-moss text-white transition hover:brightness-110 disabled:opacity-50"
                 disabled={room.isSilent || isSending || !activeSessionId}
                 type="submit"
@@ -713,7 +725,7 @@ export function RoomShell({ room }: { room: Room }) {
   );
 }
 
-function SharedAshtray({ count }: { count: number }) {
+function SharedAshtray({ count, label }: { count: number; label: string }) {
   const visibleCount = Math.min(24, Math.max(0, count));
   const butts = Array.from({ length: visibleCount }, (_, index) => ({
     bottom: 9 + (index % 3) * 8 + Math.floor(index / 12) * 3,
@@ -723,7 +735,8 @@ function SharedAshtray({ count }: { count: number }) {
 
   return (
     <div
-      aria-label={`${count} cigarettes finished today`}
+      aria-label={label}
+      role="img"
       className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-2"
     >
       <div className="relative h-20 w-[min(28rem,82vw)]">
@@ -763,6 +776,7 @@ function FloatingMessage({
   const isDisappearing = message.phase === "disappearing";
   const isMine = message.message.anonymousUserId === anonymousUserId;
   const isAmbient = message.message.id.startsWith(AMBIENT_PREFIX);
+  const copy = t(lang);
 
   return (
     <div
@@ -797,7 +811,7 @@ function FloatingMessage({
         }
       >
         <p className="text-[10px] font-bold text-white/55">
-          {isMine ? "you" : message.message.nickname}
+          {isMine ? copy.you : message.message.nickname}
         </p>
         <p className="mt-1">{message.message.body}</p>
         {!isMine && !isAmbient && (
@@ -818,7 +832,8 @@ function FloatingMessage({
               );
               return (
                 <button
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${
+                  aria-pressed={active}
+                  className={`rounded px-2 py-1 text-[11px] font-bold transition focus-visible:ring-2 focus-visible:ring-white/70 ${
                     active ? "bg-moss text-white" : "bg-white/10 text-white/65 hover:bg-white/20"
                   }`}
                   key={reactionType}
