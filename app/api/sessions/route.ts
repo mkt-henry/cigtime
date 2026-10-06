@@ -1,5 +1,5 @@
 import { after, NextResponse } from "next/server";
-import { SESSION_DURATION_SEC } from "@/lib/constants";
+import { SESSION_DURATION_OPTIONS, SESSION_DURATION_SEC } from "@/lib/constants";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { isAnonymousUserId, isShortString, isUuid } from "@/lib/requestValidation";
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid session request." }, { status: 400 });
   }
 
-  const durationSec = SESSION_DURATION_SEC;
+  const durationSec = SESSION_DURATION_OPTIONS.includes(body.durationSec) ? body.durationSec : SESSION_DURATION_SEC;
   const endsAt = new Date(Date.now() + durationSec * 1000).toISOString();
 
   const { data: session, error } = await supabase

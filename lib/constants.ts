@@ -1,6 +1,8 @@
 import type { ReactionType, RitualObject, Room } from "./types";
 
-export const SESSION_DURATION_SEC = 180;
+export const SESSION_DURATION_SEC = 60;
+// Lengths the person in the room can pick for their own cigtime.
+export const SESSION_DURATION_OPTIONS = [60, 180, 300, 600];
 
 export const ROOMS: Room[] = [
   {

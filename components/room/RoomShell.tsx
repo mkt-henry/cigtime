@@ -7,7 +7,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/common/Button";
-import { REACTIONS, RITUAL_OBJECTS, type ReportReason } from "@/lib/constants";
+import {
+  REACTIONS,
+  RITUAL_OBJECTS,
+  SESSION_DURATION_OPTIONS,
+  SESSION_DURATION_SEC,
+  type ReportReason,
+} from "@/lib/constants";
 import { ShareCard } from "./ShareCard";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import { t, type Lang } from "@/lib/i18n";
@@ -16,7 +22,9 @@ import { getAmbientMessages } from "@/lib/randomMessages";
 import {
   clearRoomBackground,
   getRoomBackground,
+  getSessionDuration,
   saveRoomBackground,
+  saveSessionDuration,
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -56,7 +64,8 @@ type MessageTarget = {
 
 export function RoomShell({ room }: { room: Room }) {
   const anonymousUser = useAnonymousUser();
-  const timer = useSessionTimer();
+  const [durationSec, setDurationSec] = useState(SESSION_DURATION_SEC);
+  const timer = useSessionTimer(durationSec);
   const lang = useLang();
   const copy = t(lang);
   const { mutedUsers, mute } = useMutedUsers();
@@ -119,6 +128,11 @@ export function RoomShell({ room }: { room: Room }) {
   useEffect(() => {
     setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
+
+  useEffect(() => {
+    const saved = getSessionDuration();
+    if (saved && SESSION_DURATION_OPTIONS.includes(saved)) setDurationSec(saved);
+  }, []);
 
   useEffect(() => {
     if (!anonymousUser) return;
@@ -264,6 +278,7 @@ export function RoomShell({ room }: { room: Room }) {
         const response = await fetch("/api/sessions", {
           body: JSON.stringify({
             anonymousUserId: user.id,
+            durationSec,
             nickname: user.nickname,
             objectKey,
             roomSlug: room.slug,
@@ -288,7 +303,7 @@ export function RoomShell({ room }: { room: Room }) {
     return () => {
       cancelled = true;
     };
-  }, [anonymousUser, objectKey, room.slug, sessionRun]);
+  }, [anonymousUser, durationSec, objectKey, room.slug, sessionRun]);
 
   useEffect(() => {
     if (!anonymousUser || !timer.isDone || !activeSessionId || completedSessionRef.current === activeSessionId) return;
@@ -486,6 +501,15 @@ export function RoomShell({ room }: { room: Room }) {
     }
   }
 
+  // A new length starts a fresh cigtime, the same way switching objects does.
+  function changeDuration(seconds: number) {
+    saveSessionDuration(seconds);
+    setDurationSec(seconds);
+    setDroppedCount(0);
+    setLastThought(null);
+    setSessionReactionCount(null);
+  }
+
   async function updateRoomBackground(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
@@ -592,6 +616,18 @@ export function RoomShell({ room }: { room: Room }) {
             {RITUAL_OBJECTS.map((object) => (
               <option className="bg-neutral-900 text-white" key={object.key} value={object.key}>
                 {object.name}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label={copy.durationLabel}
+            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            onChange={(event) => changeDuration(Number(event.target.value))}
+            value={durationSec}
+          >
+            {SESSION_DURATION_OPTIONS.map((seconds) => (
+              <option className="bg-neutral-900 text-white" key={seconds} value={seconds}>
+                {copy.durationOption(seconds / 60)}
               </option>
             ))}
           </select>

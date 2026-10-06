@@ -8,12 +8,12 @@ export function pickLang(raw?: string | null): Lang {
 }
 
 const EN = {
-  heroBadge: "3 minute anonymous room",
+  heroBadge: "1 minute anonymous room",
   heroTaglineTop: "Take your cigtime.",
   heroTaglineBottom: "A place to let it out.",
   heroCta: "Let it out",
   heroReactions: "See reactions",
-  heroMetricRoom: "03:00 room",
+  heroMetricRoom: "01:00 room",
   heroMetricPrivate: "private by default",
   heroMetricDrop: "drop it and leave",
   heroObjects: "Objects",
@@ -25,7 +25,7 @@ const EN = {
   navGuidelines: "Guidelines",
 
   roomsTitle: "Where are you taking your cigtime?",
-  roomsSubtitle: "Pick a room. Three minutes, then you leave lighter.",
+  roomsSubtitle: "Pick a room. A minute or a few, then you leave lighter.",
   roomsSilentTag: "no posting",
 
   opening: "Opening room...",
@@ -41,6 +41,8 @@ const EN = {
   removeBackground: "Remove room background",
   roomAria: "Interactive cigtime room. Press Enter to share a thought.",
   objectLabel: "Ritual object",
+  durationLabel: "Cigtime length",
+  durationOption: (minutes: number) => `${minutes} min`,
   sendThought: "Send thought",
   you: "you",
   ashtrayLabel: (count: number) => `${count} cigarettes finished today`,
@@ -98,12 +100,12 @@ const EN = {
 type Copy = typeof EN;
 
 const ES: Copy = {
-  heroBadge: "sala anónima de 3 minutos",
+  heroBadge: "sala anónima de 1 minuto",
   heroTaglineTop: "Tómate tu cigtime.",
   heroTaglineBottom: "Un lugar para desahogarte.",
   heroCta: "Desahógate",
   heroReactions: "Ver reacciones",
-  heroMetricRoom: "sala de 03:00",
+  heroMetricRoom: "sala de 01:00",
   heroMetricPrivate: "privado por defecto",
   heroMetricDrop: "suéltalo y vete",
   heroObjects: "Objetos",
@@ -115,7 +117,7 @@ const ES: Copy = {
   navGuidelines: "Normas",
 
   roomsTitle: "¿Dónde vas a tomarte tu cigtime?",
-  roomsSubtitle: "Elige una sala. Tres minutos y sales más ligero.",
+  roomsSubtitle: "Elige una sala. Un minuto o unos pocos, y sales más ligero.",
   roomsSilentTag: "sin mensajes",
 
   opening: "Abriendo la sala...",
@@ -131,6 +133,8 @@ const ES: Copy = {
   removeBackground: "Quitar fondo de la sala",
   roomAria: "Sala interactiva de cigtime. Pulsa Enter para soltar un pensamiento.",
   objectLabel: "Objeto del ritual",
+  durationLabel: "Duración del cigtime",
+  durationOption: (minutes: number) => `${minutes} min`,
   sendThought: "Enviar pensamiento",
   you: "tú",
   ashtrayLabel: (count: number) => `${count} cigarrillos terminados hoy`,

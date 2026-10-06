@@ -1,6 +1,6 @@
 # cigtime
 
-Anonymous three-minute rooms built with Next.js and Supabase.
+Anonymous one-minute (adjustable) rooms built with Next.js and Supabase.
 
 ## Local setup
 
