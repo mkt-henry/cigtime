@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { pickLang, t } from "@/lib/i18n";
@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  themeColor: "#171717",
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = t(pickLang((await headers()).get("accept-language")));

@@ -1,5 +1,14 @@
 const MUTED_KEY = "cigtime.mutedUsers";
 const ROOM_BACKGROUND_KEY = "cigtime.roomBackgrounds";
+const DURATION_KEY = "cigtime.sessionDurationSec";
+
+export function getSessionDuration() {
+  return Number(window.localStorage.getItem(DURATION_KEY)) || null;
+}
+
+export function saveSessionDuration(durationSec: number) {
+  window.localStorage.setItem(DURATION_KEY, String(durationSec));
+}
 
 export function getMutedUsers() {
   const raw = window.localStorage.getItem(MUTED_KEY);

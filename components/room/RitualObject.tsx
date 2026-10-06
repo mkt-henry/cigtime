@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RitualObject as RitualObjectType } from "@/lib/types";
 import { SmokerPerspectiveCigarette } from "@/components/common/SmokerPerspectiveCigarette";
+import { depth, useParallax } from "@/hooks/useParallax";
 
 export function RitualObject({
   backgroundImage,
@@ -120,7 +121,7 @@ function ObjectVisual({
             className="relative h-2 rounded-r-full bg-neutral-400 transition-all duration-700"
             style={{ width: `${ashWidth}px` }}
           >
-            <span className="absolute right-[-4px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_10px_rgba(242,166,90,0.7)]" />
+            <span data-ember="0.7" className="absolute right-[-4px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-ember shadow-[0_0_10px_rgba(242,166,90,0.7)]" />
           </div>
         </div>
         <div className="absolute bottom-5 left-10 h-3 w-36 rounded-full bg-neutral-300" />
@@ -139,6 +140,7 @@ function ObjectVisual({
           style={{ opacity: steamOpacity }}
         />
         <div
+          data-ember="0.45"
           className="smoke-thread absolute left-24 top-8 h-24 w-8 rounded-full border-r-2 border-moss/35 [animation-delay:1.2s]"
           style={{ opacity: steamOpacity }}
         />
@@ -160,6 +162,7 @@ function ObjectVisual({
     return (
       <div className="relative h-48 w-48">
         <div
+          data-ember="0.25"
           className="pulse-soft absolute left-[86px] h-10 w-5 origin-bottom rounded-full bg-ember shadow-[0_0_28px_rgba(242,166,90,0.6)] transition-all duration-700"
           style={{ bottom: `${34 + waxHeight}px`, transform: `scale(${flameScale})` }}
         />
@@ -183,6 +186,8 @@ function ObjectVisual({
 }
 
 function RooftopView() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useParallax(rootRef);
   const progress = useTimeOfDayProgress();
   const dusk = Math.min(1, progress * 1.25);
   const night = Math.max(0, (progress - 0.55) / 0.45);
@@ -196,29 +201,60 @@ function RooftopView() {
   )} 58%, ${mixRgb([80, 92, 90], [18, 22, 29], night)} 100%)`;
 
   return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden>
+    <div className="absolute inset-0 overflow-hidden" aria-hidden ref={rootRef}>
       <div className="absolute inset-0 transition-colors duration-700" style={{ background: sky }} />
-      <div
-        className="absolute left-[18%] h-16 w-16 rounded-full bg-ember shadow-[0_0_55px_rgba(242,166,90,0.75)] transition-all duration-700"
-        style={{ top: `${sunTop}px`, opacity: Math.max(0, 1 - progress * 1.4) }}
-      />
-      <div
-        className="absolute right-[18%] top-12 h-14 w-14 rounded-full bg-white shadow-[0_0_45px_rgba(255,255,255,0.75)] transition-opacity duration-700"
-        style={{ opacity: moonOpacity }}
-      />
-      <div className="absolute inset-x-0 bottom-20 h-28">
-        {Array.from({ length: 9 }, (_, index) => (
-          <Building key={index} index={index} lightOpacity={lightOpacity} />
-        ))}
+      <div className="absolute -inset-x-6 inset-y-0" style={depth(4)}>
+        <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: night }}>
+          {STARS.map((star, index) => (
+            <span
+              className="star absolute rounded-full bg-white"
+              key={index}
+              style={{
+                animationDelay: `${star.delay}s`,
+                height: star.size,
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: star.size,
+              }}
+            />
+          ))}
+        </div>
+        <div
+          className="absolute left-[18%] h-16 w-16 rounded-full bg-ember shadow-[0_0_55px_rgba(242,166,90,0.75)] transition-all duration-700"
+          style={{ top: `${sunTop}px`, opacity: Math.max(0, 1 - progress * 1.4) }}
+        />
+        <div
+          className="absolute right-[18%] top-12 h-14 w-14 rounded-full bg-white shadow-[0_0_45px_rgba(255,255,255,0.75)] transition-opacity duration-700"
+          style={{ opacity: moonOpacity }}
+        />
+        <div className="cloud-drift absolute left-0 top-[16%] h-10 w-56 rounded-full bg-white/25 blur-2xl" style={{ opacity: 1 - night * 0.7 }} />
+        <div className="cloud-drift absolute left-0 top-[26%] h-8 w-72 rounded-full bg-white/20 blur-2xl [animation-delay:-40s] [animation-duration:110s]" style={{ opacity: 1 - night * 0.7 }} />
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-[#202625]" />
-      <div className="absolute inset-x-0 bottom-20 h-4 bg-[#39413d]" />
-      <div className="absolute bottom-20 left-10 h-16 w-28 rounded-t-md bg-[#2b3332]" />
-      <div className="absolute bottom-24 right-12 h-10 w-36 rounded-t-md bg-[#2f3836]" />
-      <div className="absolute bottom-7 left-1/2 h-3 w-[72%] -translate-x-1/2 rounded-full bg-black/30 blur-sm" />
+      <div className="absolute -inset-x-8 inset-y-0" style={depth(10)}>
+        <div className="absolute inset-x-0 bottom-20 h-28">
+          {Array.from({ length: 9 }, (_, index) => (
+            <Building key={index} index={index} lightOpacity={lightOpacity} />
+          ))}
+        </div>
+      </div>
+      <div className="absolute -inset-x-10 inset-y-0" style={depth(18)}>
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-[#202625]" />
+        <div className="absolute inset-x-0 bottom-20 h-4 bg-[#39413d]" />
+        <div className="absolute bottom-20 left-14 h-16 w-28 rounded-t-md bg-[#2b3332]" />
+        <div className="absolute bottom-24 right-16 h-10 w-36 rounded-t-md bg-[#2f3836]" />
+        <div className="absolute bottom-7 left-1/2 h-3 w-[72%] -translate-x-1/2 rounded-full bg-black/30 blur-sm" />
+      </div>
     </div>
   );
 }
+
+// Fixed pseudo-random positions so server and client render the same sky.
+const STARS = Array.from({ length: 28 }, (_, index) => ({
+  delay: (index * 0.37) % 4,
+  size: index % 5 === 0 ? 3 : 2,
+  x: (index * 37 + 11) % 100,
+  y: (index * 53 + 7) % 46,
+}));
 
 function useTimeOfDayProgress() {
   const [progress, setProgress] = useState(getTimeOfDayProgress);

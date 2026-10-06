@@ -1,13 +1,19 @@
 "use client";
 
 import { ArrowLeft, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/common/Button";
-import { REACTIONS, RITUAL_OBJECTS, type ReportReason } from "@/lib/constants";
+import {
+  REACTIONS,
+  RITUAL_OBJECTS,
+  SESSION_DURATION_OPTIONS,
+  SESSION_DURATION_SEC,
+  type ReportReason,
+} from "@/lib/constants";
 import { ShareCard } from "./ShareCard";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import { t, type Lang } from "@/lib/i18n";
@@ -16,7 +22,9 @@ import { getAmbientMessages } from "@/lib/randomMessages";
 import {
   clearRoomBackground,
   getRoomBackground,
+  getSessionDuration,
   saveRoomBackground,
+  saveSessionDuration,
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -25,10 +33,23 @@ import { useAnonymousUser } from "@/hooks/useAnonymousUser";
 import { useLang } from "@/hooks/useLang";
 import { useMutedUsers } from "@/hooks/useMutedUsers";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
+import { AmbientCanvas } from "./AmbientCanvas";
 import { MessageMenu } from "./MessageMenu";
 import { RitualObject } from "./RitualObject";
 
 const AMBIENT_PREFIX = "ambient_";
+
+const riseIn = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
+};
+
+// Stable 0..1 value per message so bubbles bob out of phase with each other.
+function seedOf(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return (hash % 1000) / 1000;
+}
 
 type FloatingMsg = {
   message: SharedMessage;
@@ -43,7 +64,8 @@ type MessageTarget = {
 
 export function RoomShell({ room }: { room: Room }) {
   const anonymousUser = useAnonymousUser();
-  const timer = useSessionTimer();
+  const [durationSec, setDurationSec] = useState(SESSION_DURATION_SEC);
+  const timer = useSessionTimer(durationSec);
   const lang = useLang();
   const copy = t(lang);
   const { mutedUsers, mute } = useMutedUsers();
@@ -108,6 +130,11 @@ export function RoomShell({ room }: { room: Room }) {
   }, [room.slug]);
 
   useEffect(() => {
+    const saved = getSessionDuration();
+    if (saved && SESSION_DURATION_OPTIONS.includes(saved)) setDurationSec(saved);
+  }, []);
+
+  useEffect(() => {
     if (!anonymousUser) return;
     void trackEvent({
       anonymousUserId: anonymousUser.id,
@@ -123,6 +150,7 @@ export function RoomShell({ room }: { room: Room }) {
     const supabase = createBrowserSupabaseClient();
     let disposed = false;
     let channel: RealtimeChannel | null = null;
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 
     async function connect() {
       try {
@@ -180,7 +208,9 @@ export function RoomShell({ room }: { room: Room }) {
             },
           )
           .on("broadcast", { event: "refresh" }, () => {
-            void syncMessages();
+            // Every client receives every refresh; coalesce bursts into one fetch.
+            clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => void syncMessages(), 1200);
           })
           .on("presence", { event: "sync" }, () => {
             if (!channel) return;
@@ -206,6 +236,7 @@ export function RoomShell({ room }: { room: Room }) {
 
     return () => {
       disposed = true;
+      clearTimeout(refreshTimer);
       realtimeChannelRef.current = null;
       if (channel && supabase) void supabase.removeChannel(channel);
     };
@@ -247,6 +278,7 @@ export function RoomShell({ room }: { room: Room }) {
         const response = await fetch("/api/sessions", {
           body: JSON.stringify({
             anonymousUserId: user.id,
+            durationSec,
             nickname: user.nickname,
             objectKey,
             roomSlug: room.slug,
@@ -271,7 +303,7 @@ export function RoomShell({ room }: { room: Room }) {
     return () => {
       cancelled = true;
     };
-  }, [anonymousUser, objectKey, room.slug, sessionRun]);
+  }, [anonymousUser, durationSec, objectKey, room.slug, sessionRun]);
 
   useEffect(() => {
     if (!anonymousUser || !timer.isDone || !activeSessionId || completedSessionRef.current === activeSessionId) return;
@@ -469,6 +501,15 @@ export function RoomShell({ room }: { room: Room }) {
     }
   }
 
+  // A new length starts a fresh cigtime, the same way switching objects does.
+  function changeDuration(seconds: number) {
+    saveSessionDuration(seconds);
+    setDurationSec(seconds);
+    setDroppedCount(0);
+    setLastThought(null);
+    setSessionReactionCount(null);
+  }
+
   async function updateRoomBackground(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
@@ -507,8 +548,9 @@ export function RoomShell({ room }: { room: Room }) {
       .reduce((total, item) => total + item.message.reactions.length, 0);
 
   return (
+    <MotionConfig reducedMotion="user">
     <main
-      aria-label="Interactive cigtime room. Press Enter to share a thought."
+      aria-label={copy.roomAria}
       className="fixed inset-0 overflow-hidden"
       onClick={handleSceneClick}
       onKeyDown={(event) => {
@@ -534,11 +576,13 @@ export function RoomShell({ room }: { room: Room }) {
         />
       </div>
 
-      <SharedAshtray count={todayCigaretteCount} />
+      <AmbientCanvas intensity={timer.isAccelerating ? 2.2 : 1} />
+
+      <SharedAshtray count={todayCigaretteCount} label={copy.ashtrayLabel(todayCigaretteCount)} />
 
       {/* Top HUD */}
       <div
-        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-3"
+        className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-4 py-3"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2">
@@ -561,15 +605,29 @@ export function RoomShell({ room }: { room: Room }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+          <div className="order-last flex items-center gap-2 sm:order-first">
           <select
-            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none"
+            aria-label={copy.objectLabel}
+            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             onChange={(event) => setObjectKey(event.target.value)}
             value={objectKey}
           >
             {RITUAL_OBJECTS.map((object) => (
               <option className="bg-neutral-900 text-white" key={object.key} value={object.key}>
                 {object.name}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label={copy.durationLabel}
+            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            onChange={(event) => changeDuration(Number(event.target.value))}
+            value={durationSec}
+          >
+            {SESSION_DURATION_OPTIONS.map((seconds) => (
+              <option className="bg-neutral-900 text-white" key={seconds} value={seconds}>
+                {copy.durationOption(seconds / 60)}
               </option>
             ))}
           </select>
@@ -598,7 +656,14 @@ export function RoomShell({ room }: { room: Room }) {
               <Trash2 size={15} aria-hidden />
             </button>
           )}
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-black/30 px-3 py-2 font-mono text-sm font-black text-white backdrop-blur-sm">
+          </div>
+          <div
+            aria-label={`${minutes}:${seconds}`}
+            className={`inline-flex items-center gap-1.5 rounded-md bg-black/30 px-3 py-2 font-mono text-sm font-black tabular-nums text-white backdrop-blur-sm ${
+              timer.remainingSec > 0 && timer.remainingSec <= 10 ? "pulse-soft" : ""
+            }`}
+            role="timer"
+          >
             <Timer size={14} aria-hidden />
             {minutes}:{seconds}
           </div>
@@ -628,7 +693,7 @@ export function RoomShell({ room }: { room: Room }) {
       {/* Tap hint */}
       {!showInput && visibleMessages.length === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-7 z-10 text-center">
-          <p className="text-xs font-medium text-white/30">
+          <p className="text-xs font-medium text-white/60 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
           </p>
         </div>
@@ -659,6 +724,7 @@ export function RoomShell({ room }: { room: Room }) {
                 value={inputBody}
               />
               <button
+                aria-label={copy.sendThought}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-moss text-white transition hover:brightness-110 disabled:opacity-50"
                 disabled={room.isSilent || isSending || !activeSessionId}
                 type="submit"
@@ -684,14 +750,27 @@ export function RoomShell({ room }: { room: Room }) {
 
       {/* Session end modal */}
       {timer.isDone && (
-        <section className="fixed inset-0 z-40 grid place-items-center bg-ink/45 px-4">
-          <div className="w-full max-w-md rounded-lg border border-line bg-white p-6 shadow-soft">
-            <h2 className="text-3xl font-black">{copy.endTitle}</h2>
-            <p className="mt-4 text-lg leading-7 text-neutral-700">{copy.endDropped(droppedCount)}</p>
-            <p className="mt-1 text-sm font-semibold text-neutral-500">
+        <motion.section
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-40 grid place-items-center bg-ink/45 px-4 backdrop-blur-[2px]"
+          initial={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div
+            animate="show"
+            className="w-full max-w-md rounded-lg border border-line bg-white p-6 shadow-soft"
+            initial="hidden"
+            variants={{
+              hidden: { opacity: 0, y: 28, scale: 0.96 },
+              show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 140, damping: 18, delayChildren: 0.25, staggerChildren: 0.12 } },
+            }}
+          >
+            <motion.h2 className="text-3xl font-black" variants={riseIn}>{copy.endTitle}</motion.h2>
+            <motion.p className="mt-4 text-lg leading-7 text-neutral-700" variants={riseIn}>{copy.endDropped(droppedCount)}</motion.p>
+            <motion.p className="mt-1 text-sm font-semibold text-neutral-500" variants={riseIn}>
               {copy.endReactions(reactionsReceived)}
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
+            </motion.p>
+            <motion.div className="mt-6 flex flex-col gap-3" variants={riseIn}>
               <ShareCard thought={lastThought} lang={lang} />
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button onClick={restart} type="button">
@@ -705,15 +784,16 @@ export function RoomShell({ room }: { room: Room }) {
                   {copy.leaveLighter}
                 </Link>
               </div>
-            </div>
-          </div>
-        </section>
+            </motion.div>
+          </motion.div>
+        </motion.section>
       )}
     </main>
+    </MotionConfig>
   );
 }
 
-function SharedAshtray({ count }: { count: number }) {
+function SharedAshtray({ count, label }: { count: number; label: string }) {
   const visibleCount = Math.min(24, Math.max(0, count));
   const butts = Array.from({ length: visibleCount }, (_, index) => ({
     bottom: 9 + (index % 3) * 8 + Math.floor(index / 12) * 3,
@@ -723,7 +803,8 @@ function SharedAshtray({ count }: { count: number }) {
 
   return (
     <div
-      aria-label={`${count} cigarettes finished today`}
+      aria-label={label}
+      role="img"
       className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-2"
     >
       <div className="relative h-20 w-[min(28rem,82vw)]">
@@ -763,6 +844,8 @@ function FloatingMessage({
   const isDisappearing = message.phase === "disappearing";
   const isMine = message.message.anonymousUserId === anonymousUserId;
   const isAmbient = message.message.id.startsWith(AMBIENT_PREFIX);
+  const copy = t(lang);
+  const seed = seedOf(message.message.id);
 
   return (
     <div
@@ -776,6 +859,10 @@ function FloatingMessage({
       }}
     >
       <motion.div
+        animate={isDisappearing ? undefined : { y: [0, -4, 0] }}
+        transition={{ duration: 5 + seed * 3, ease: "easeInOut", repeat: Infinity, delay: seed * 2 }}
+      >
+      <motion.div
         className="relative rounded-xl px-5 py-3 text-center text-sm font-medium text-white shadow-xl backdrop-blur-sm"
         style={{
           background: "rgba(12, 12, 12, 0.62)",
@@ -784,20 +871,33 @@ function FloatingMessage({
           overflow: "visible",
           wordBreak: "break-word",
         }}
-        initial={{ opacity: 0, y: 10, scale: 0.96, filter: "blur(0px)" }}
+        initial={{ opacity: 0, y: 18, scale: 0.9, filter: "blur(6px)" }}
         animate={
           isDisappearing
             ? { opacity: 0, y: -30, scale: 0.93, filter: "blur(5px)" }
-            : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+            : {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                filter: "blur(0px)",
+                boxShadow: isAmbient
+                  ? "0 0 0 0 rgba(242,166,90,0)"
+                  : ["0 0 0 3px rgba(242,166,90,0.55)", "0 0 0 0 rgba(242,166,90,0)"],
+              }
         }
         transition={
           isDisappearing
             ? { duration: 2, ease: "easeIn" }
-            : { duration: 0.35, ease: "easeOut" }
+            : {
+                default: { type: "spring", stiffness: 170, damping: 16 },
+                filter: { duration: 0.5 },
+                boxShadow: { duration: 1.2, ease: "easeOut" },
+              }
         }
+        whileHover={{ scale: 1.03 }}
       >
         <p className="text-[10px] font-bold text-white/55">
-          {isMine ? "you" : message.message.nickname}
+          {isMine ? copy.you : message.message.nickname}
         </p>
         <p className="mt-1">{message.message.body}</p>
         {!isMine && !isAmbient && (
@@ -817,8 +917,11 @@ function FloatingMessage({
                 (reaction) => reaction.anonymous_user_id === anonymousUserId,
               );
               return (
-                <button
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${
+                <motion.button
+                  aria-pressed={active}
+                  whileTap={{ scale: 0.82 }}
+                  whileHover={{ scale: 1.08 }}
+                  className={`rounded px-2 py-1 text-[11px] font-bold transition focus-visible:ring-2 focus-visible:ring-white/70 ${
                     active ? "bg-moss text-white" : "bg-white/10 text-white/65 hover:bg-white/20"
                   }`}
                   key={reactionType}
@@ -826,8 +929,19 @@ function FloatingMessage({
                   onClick={() => onReact(message.message.id, reactionType)}
                   type="button"
                 >
-                  {reactionType}{reactions.length > 0 ? ` ${reactions.length}` : ""}
-                </button>
+                  {reactionType}
+                  {reactions.length > 0 ? (
+                    <motion.span
+                      animate={{ scale: 1 }}
+                      className="ml-1 inline-block"
+                      initial={{ scale: 1.7 }}
+                      key={reactions.length}
+                      transition={{ type: "spring", stiffness: 400, damping: 12 }}
+                    >
+                      {reactions.length}
+                    </motion.span>
+                  ) : null}
+                </motion.button>
               );
             })}
           </div>
@@ -840,6 +954,7 @@ function FloatingMessage({
             <span className="ash-crumb ash-crumb-a" style={{ left: "33%", bottom: "-2px", animationDelay: "0.2s" }} />
           </>
         )}
+      </motion.div>
       </motion.div>
     </div>
   );

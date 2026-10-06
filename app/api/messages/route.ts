@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
@@ -74,22 +74,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "DB not available." }, { status: 500 });
   }
 
-  const { data: room } = await supabase
-    .from("rooms")
-    .select("id, is_silent")
-    .eq("slug", body.roomSlug)
-    .single();
+  const [{ data: room }, { data: session }] = await Promise.all([
+    supabase.from("rooms").select("id, is_silent").eq("slug", body.roomSlug).single(),
+    supabase
+      .from("sessions")
+      .select("id, room_id, anonymous_user_id, status, ends_at")
+      .eq("id", body.sessionId)
+      .eq("anonymous_user_id", body.anonymousUserId)
+      .single(),
+  ]);
 
   if (!room || room.is_silent) {
     return NextResponse.json({ error: "Messages are not allowed in this room." }, { status: 400 });
   }
-
-  const { data: session } = await supabase
-    .from("sessions")
-    .select("id, room_id, anonymous_user_id, status, ends_at")
-    .eq("id", body.sessionId)
-    .eq("anonymous_user_id", body.anonymousUserId)
-    .single();
 
   const graceCutoff = Date.now() - 60_000;
   if (
@@ -103,20 +100,21 @@ export async function POST(request: Request) {
   }
 
   const cooldownCutoff = new Date(Date.now() - 10_000).toISOString();
-  const { count: recentMessageCount } = await supabase
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("anonymous_user_id", body.anonymousUserId)
-    .gte("created_at", cooldownCutoff);
+  const [{ count: recentMessageCount }, { count: previousMessageCount }] = await Promise.all([
+    supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("anonymous_user_id", body.anonymousUserId)
+      .gte("created_at", cooldownCutoff),
+    supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("anonymous_user_id", body.anonymousUserId),
+  ]);
 
   if ((recentMessageCount ?? 0) > 0) {
     return NextResponse.json({ error: "Wait 10 seconds before sending again." }, { status: 429 });
   }
-
-  const { count: previousMessageCount } = await supabase
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("anonymous_user_id", body.anonymousUserId);
 
   const { data: message, error } = await supabase
     .from("messages")
@@ -134,12 +132,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create message." }, { status: 500 });
   }
 
-  await recordAnalyticsEvent(supabase, {
-    anonymousUserId: body.anonymousUserId,
-    eventName: (previousMessageCount ?? 0) === 0 ? "first_message_sent" : "message_sent",
-    roomSlug: body.roomSlug,
-    sessionId: body.sessionId,
-  });
+  // Analytics must not delay the response the sender is waiting on.
+  after(() =>
+    recordAnalyticsEvent(supabase, {
+      anonymousUserId: body.anonymousUserId,
+      eventName: (previousMessageCount ?? 0) === 0 ? "first_message_sent" : "message_sent",
+      roomSlug: body.roomSlug,
+      sessionId: body.sessionId,
+    }),
+  );
 
   return NextResponse.json({
     id: message.id,

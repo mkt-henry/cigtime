@@ -49,7 +49,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
       {
         heading: "The service",
         body: [
-          "cigtime provides anonymous three-minute rooms. It is offered as-is, with no guarantee of availability, and it may change or stop at any time.",
+          "cigtime provides short anonymous rooms. It is offered as-is, with no guarantee of availability, and it may change or stop at any time.",
           "It is not a health service. It does not offer medical, psychological, or legal advice.",
         ],
       },
@@ -156,7 +156,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
       {
         heading: "El servicio",
         body: [
-          "cigtime ofrece salas anónimas de tres minutos. Se ofrece tal cual, sin garantía de disponibilidad, y puede cambiar o cerrar en cualquier momento.",
+          "cigtime ofrece salas anónimas breves. Se ofrece tal cual, sin garantía de disponibilidad, y puede cambiar o cerrar en cualquier momento.",
           "No es un servicio de salud. No da consejo médico, psicológico ni legal.",
         ],
       },

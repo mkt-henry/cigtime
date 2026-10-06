@@ -184,7 +184,7 @@ export function SmokerPerspectiveCigarette({
             rx="8.5"
             ry="9"
           />
-          <ellipse cx={litX - 1} cy={centerY} fill="#E8943A" opacity={isActive ? (isAccelerating ? 0.75 : 0.6) : 0.2} rx="2.7" ry="3.4" />
+          <ellipse data-ember="1" className={isAccelerating ? "ember-flicker" : undefined} cx={litX - 1} cy={centerY} fill="#E8943A" opacity={isActive ? (isAccelerating ? 0.75 : 0.6) : 0.2} rx="2.7" ry="3.4" />
           <ellipse cx={litX + 1.5} cy={centerY} fill="#77766e" opacity={ashOpacity * 0.75} rx="4.1" ry="7.4" />
           <circle cx={litX - 6} cy={centerY + 13} fill="#8b897f" opacity={ashOpacity * 0.42} r="1.8" />
           <circle cx={litX + 7} cy={centerY + 15} fill="#c5c0b4" opacity={ashOpacity * 0.34} r="1.3" />
