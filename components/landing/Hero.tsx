@@ -1,94 +1,96 @@
-import { ArrowRight, Cigarette, Clock3, Flame, Sparkles } from "lucide-react";
-import type { ReactNode } from "react";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { LinkButton } from "@/components/common/Button";
-import { RITUAL_OBJECTS, ROOMS } from "@/lib/constants";
+import { ROOMS } from "@/lib/constants";
 import { pickLang, t } from "@/lib/i18n";
+import { sceneFor } from "@/lib/scenes";
 import { HeroBackdrop } from "./HeroBackdrop";
 
 export async function Hero() {
-  const copy = t(pickLang((await headers()).get("accept-language")));
+  const lang = pickLang((await headers()).get("accept-language"));
+  const copy = t(lang);
 
   return (
     <main>
-      <section className="relative min-h-[100svh] overflow-hidden bg-[#d8ddd3] px-4 pb-8 pt-24 sm:px-6 lg:pb-10">
+      <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-16 pt-28 sm:pb-20">
         <HeroBackdrop />
-        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-8rem)] w-full max-w-6xl flex-col justify-between gap-12 pb-10 pt-2 lg:pt-8">
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <p className="fade-up mb-5 inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/25 px-3 py-1 text-sm font-semibold text-white shadow-sm backdrop-blur-md">
-              <Sparkles size={16} aria-hidden />
-              {copy.heroBadge}
-            </p>
-            <h1 style={{ animationDelay: "120ms" }} className="fade-up text-6xl font-black leading-[0.9] tracking-normal text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.28)] sm:text-8xl">
-              cigtime
+            <h1 className="fade-up font-display text-[clamp(4.5rem,15vw,11.5rem)] font-black uppercase leading-[0.86] tracking-[-0.01em] text-mist">
+              {copy.heroTitle}
             </h1>
-            <p style={{ animationDelay: "260ms" }} className="fade-up mt-7 max-w-xl text-2xl font-semibold leading-tight text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.3)] sm:text-3xl">
-              {copy.heroTaglineTop}
-              <br />
-              {copy.heroTaglineBottom}
+            <p
+              className="fade-up mt-7 max-w-md text-lg leading-relaxed text-mist/80"
+              style={{ animationDelay: "160ms" }}
+            >
+              {copy.heroLead}
             </p>
-            <div style={{ animationDelay: "400ms" }} className="fade-up mt-8 flex flex-col gap-3 sm:flex-row">
-              <LinkButton className="shadow-[0_14px_34px_rgba(0,0,0,0.2)]" href="/rooms">
-                <Cigarette size={18} aria-hidden />
-                {copy.heroCta}
-              </LinkButton>
-              <LinkButton
-                className="border-white/45 bg-white/20 text-white backdrop-blur-md hover:border-white"
-                href="/reactions"
-                variant="secondary"
-              >
+            <div className="fade-up mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "300ms" }}>
+              <LinkButton href="/rooms">{copy.heroCta}</LinkButton>
+              <LinkButton href="/reactions" variant="ghost">
                 {copy.heroReactions}
-                <ArrowRight size={18} aria-hidden />
               </LinkButton>
             </div>
           </div>
-
-          <div style={{ animationDelay: "560ms" }} className="fade-up flex max-w-2xl flex-wrap gap-3 text-sm font-semibold text-white/85">
-            <HeroMetric icon={<Clock3 size={16} aria-hidden />} label={copy.heroMetricRoom} />
-            <HeroMetric icon={<Flame size={16} aria-hidden />} label={copy.heroMetricPrivate} />
-            <HeroMetric className="hidden sm:inline-flex" icon={<Cigarette size={16} aria-hidden />} label={copy.heroMetricDrop} />
-          </div>
+          <figure
+            className="fade-up hidden max-w-[17rem] rounded-2xl border border-white/10 bg-asphalt/55 px-5 py-4 text-[15px] leading-snug text-mist backdrop-blur-md lg:block"
+            style={{ animationDelay: "700ms" }}
+          >
+            <figcaption className="text-xs text-fog">Quiet Signal</figcaption>
+            <blockquote className="mt-1">{copy.heroThought}</blockquote>
+            <p className="mt-3 flex gap-1.5 text-xs text-fog">
+              <span className="rounded-full bg-sodium px-2 py-0.5 font-semibold text-asphalt">same 12</span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5">oof 4</span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5">hug 2</span>
+            </p>
+          </figure>
         </div>
-        <FloatingThought thought={copy.heroThought} />
       </section>
 
-      <section className="border-y border-line bg-[#f5f5f2]/90 px-4 py-8 sm:px-6">
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
-          <Preview title={copy.heroObjects} items={RITUAL_OBJECTS.map((object) => object.name)} />
-          <Preview title={copy.heroRooms} items={ROOMS.map((room) => room.name)} />
-        </div>
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+        <h2 className="font-display text-4xl font-black uppercase leading-none text-mist sm:text-5xl">
+          {copy.stepsTitle}
+        </h2>
+        <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
+          {copy.steps.map((step, index) => (
+            <li key={step.title}>
+              <span className="font-display text-5xl font-black leading-none text-sodium">{index + 1}</span>
+              <h3 className="mt-4 text-xl font-semibold text-mist">{step.title}</h3>
+              <p className="mt-2 max-w-xs leading-relaxed text-fog">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="pb-24">
+        <h2 className="mx-auto max-w-6xl px-5 font-display text-4xl font-black uppercase leading-none text-mist sm:px-8 sm:text-5xl">
+          {copy.spotsTitle}
+        </h2>
+        <ul className="mx-auto mt-10 flex max-w-6xl snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-4 sm:scroll-px-8 [scrollbar-width:none] sm:px-8">
+          {ROOMS.map((room) => (
+            <li className="w-[68vw] shrink-0 snap-start sm:w-64" key={room.slug}>
+              <Link className="group block" href={`/room/${room.slug}`}>
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
+                  <img
+                    alt=""
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    decoding="async"
+                    loading="lazy"
+                    src={sceneFor(room.slug).small}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-asphalt/90 via-asphalt/10 to-transparent" />
+                  <span className="absolute inset-x-4 bottom-4 font-display text-3xl font-black uppercase leading-none text-mist">
+                    {room.name}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-fog">
+                  {lang === "es" ? room.descriptionEs : room.description}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </main>
-  );
-}
-
-function HeroMetric({ className = "", icon, label }: { className?: string; icon: ReactNode; label: string }) {
-  return (
-    <span className={`inline-flex items-center gap-2 rounded-md border border-white/20 bg-black/20 px-3 py-2 shadow-sm backdrop-blur-md ${className}`}>
-      {icon}
-      {label}
-    </span>
-  );
-}
-
-function Preview({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <h2 className="text-sm font-black uppercase text-neutral-500">{title}</h2>
-      <p className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-lg font-semibold text-ink">
-        {items.map((item) => (
-          <span key={item}>{item}</span>
-        ))}
-      </p>
-    </div>
-  );
-}
-
-function FloatingThought({ thought }: { thought: string }) {
-  return (
-    <div className="float-slow pointer-events-none absolute right-[7%] top-[22%] z-10 hidden max-w-[18rem] rounded-xl border border-white/15 bg-black/35 px-5 py-3 text-sm font-medium leading-6 text-white shadow-2xl backdrop-blur-md sm:block">
-      {thought}
-      <p className="mt-2 text-xs font-bold text-white/55">same 12 / oof 4 / hug 2</p>
-    </div>
   );
 }

@@ -9,10 +9,10 @@ export default async function NotFound() {
   return (
     <>
       <SiteNav />
-      <main className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6">
-        <h1 className="text-4xl font-black">{copy.notFoundTitle}</h1>
-        <p className="mt-3 text-base text-neutral-600">{copy.notFoundBody}</p>
-        <LinkButton className="mt-8" href="/rooms">
+      <main className="mx-auto max-w-2xl px-5 py-24 sm:px-8">
+        <h1 className="font-display text-7xl font-black uppercase leading-[0.9] text-mist">{copy.notFoundTitle}</h1>
+        <p className="mt-5 text-lg text-fog">{copy.notFoundBody}</p>
+        <LinkButton className="mt-10" href="/rooms">
           {copy.navRooms}
         </LinkButton>
       </main>

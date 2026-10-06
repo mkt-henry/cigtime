@@ -8,3 +8,5 @@ tsconfig.tsbuildinfo
 .vercel
 .mcp.json
 supabase/.temp/
+.review
+.preview

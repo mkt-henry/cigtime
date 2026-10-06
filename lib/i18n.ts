@@ -8,23 +8,26 @@ export function pickLang(raw?: string | null): Lang {
 }
 
 const EN = {
-  heroBadge: "1 minute anonymous room",
-  heroTaglineTop: "Take your cigtime.",
-  heroTaglineBottom: "A place to let it out.",
-  heroCta: "Let it out",
-  heroReactions: "See reactions",
-  heroMetricRoom: "01:00 room",
-  heroMetricPrivate: "private by default",
-  heroMetricDrop: "drop it and leave",
-  heroObjects: "Objects",
-  heroRooms: "Rooms",
+  heroTitle: "Take a minute.",
+  heroLead: "Step out of the tab you're stuck in. Say the one thing on your mind, or say nothing. It burns out in a minute.",
+  heroCta: "Step out",
+  heroReactions: "What came back",
   heroThought: "I just need one quiet minute today.",
+  stepsTitle: "How a cigtime goes",
+  steps: [
+    { title: "Pick a spot", body: "A rooftop, a fire escape, a back step. Everyone there is anonymous." },
+    { title: "Say one line", body: "Up to 140 characters. Others can answer with same, real, oof, lol or hug." },
+    { title: "Let it burn out", body: "When the minute is up you head back. What you said stays on the roof." },
+  ],
+  spotsTitle: "Where to stand",
 
   navRooms: "Rooms",
   navReactions: "Reactions",
   navGuidelines: "Guidelines",
+  navPrivacy: "Privacy",
+  navTerms: "Terms",
 
-  roomsTitle: "Where are you taking your cigtime?",
+  roomsTitle: "Where are you stepping out?",
   roomsSubtitle: "Pick a room. A minute or a few, then you leave lighter.",
   roomsSilentTag: "no posting",
 
@@ -45,7 +48,7 @@ const EN = {
   durationOption: (minutes: number) => `${minutes} min`,
   sendThought: "Send thought",
   you: "you",
-  ashtrayLabel: (count: number) => `${count} cigarettes finished today`,
+  ashtrayLabel: (count: number) => (count === 1 ? "1 cigarette finished today" : `${count} cigarettes finished today`),
 
   endTitle: "That's your cigtime.",
   endDropped: (count: number) =>
@@ -100,23 +103,26 @@ const EN = {
 type Copy = typeof EN;
 
 const ES: Copy = {
-  heroBadge: "sala anónima de 1 minuto",
-  heroTaglineTop: "Tómate tu cigtime.",
-  heroTaglineBottom: "Un lugar para desahogarte.",
-  heroCta: "Desahógate",
-  heroReactions: "Ver reacciones",
-  heroMetricRoom: "sala de 01:00",
-  heroMetricPrivate: "privado por defecto",
-  heroMetricDrop: "suéltalo y vete",
-  heroObjects: "Objetos",
-  heroRooms: "Salas",
+  heroTitle: "Tómate un minuto.",
+  heroLead: "Sal de la pestaña en la que estás atrapado. Di eso que traes, o no digas nada. Se consume en un minuto.",
+  heroCta: "Salir un momento",
+  heroReactions: "Lo que volvió",
   heroThought: "Hoy solo necesito un minuto de calma.",
+  stepsTitle: "Cómo va un cigtime",
+  steps: [
+    { title: "Elige un sitio", body: "Una azotea, una escalera de incendios, un escalón trasero. Todos son anónimos." },
+    { title: "Di una línea", body: "Hasta 140 caracteres. Los demás pueden responder con same, real, oof, lol o hug." },
+    { title: "Deja que se consuma", body: "Cuando pasa el minuto, vuelves. Lo que dijiste se queda en la azotea." },
+  ],
+  spotsTitle: "Dónde quedarte",
 
   navRooms: "Salas",
   navReactions: "Reacciones",
   navGuidelines: "Normas",
+  navPrivacy: "Privacidad",
+  navTerms: "Términos",
 
-  roomsTitle: "¿Dónde vas a tomarte tu cigtime?",
+  roomsTitle: "¿A dónde sales?",
   roomsSubtitle: "Elige una sala. Un minuto o unos pocos, y sales más ligero.",
   roomsSilentTag: "sin mensajes",
 
@@ -137,7 +143,7 @@ const ES: Copy = {
   durationOption: (minutes: number) => `${minutes} min`,
   sendThought: "Enviar pensamiento",
   you: "tú",
-  ashtrayLabel: (count: number) => `${count} cigarrillos terminados hoy`,
+  ashtrayLabel: (count: number) => (count === 1 ? "1 cigarrillo terminado hoy" : `${count} cigarrillos terminados hoy`),
 
   endTitle: "Ese fue tu cigtime.",
   endDropped: (count: number) =>

@@ -49,13 +49,13 @@ export function ReactionInbox() {
     };
   }, [anonymousUser]);
 
-  if (status === "loading") return <p className="text-neutral-500">{copy.reactionsLoading}</p>;
-  if (status === "error") return <p className="text-rust">{copy.reactionsError}</p>;
+  if (status === "loading") return <p className="text-fog">{copy.reactionsLoading}</p>;
+  if (status === "error") return <p className="text-ember">{copy.reactionsError}</p>;
   if (messages.length === 0) {
     return (
-      <div className="rounded-lg border border-line bg-white/80 p-6">
-        <p className="font-semibold text-neutral-600">{copy.reactionsEmpty}</p>
-        <Link className="mt-4 inline-block font-bold text-moss hover:underline" href="/room/rooftop">
+      <div className="rounded-2xl border border-white/10 bg-slate p-7">
+        <p className="text-lg text-mist">{copy.reactionsEmpty}</p>
+        <Link className="mt-5 inline-flex h-11 items-center rounded-full bg-sodium px-5 text-sm font-semibold text-asphalt transition hover:bg-[#f7b55a]" href="/room/rooftop">
           {copy.reactionsCta}
         </Link>
       </div>
@@ -63,19 +63,19 @@ export function ReactionInbox() {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3">
       {messages.map((message) => {
         const counts = new Map<ReactionType, number>();
         for (const reaction of message.reactions) {
           counts.set(reaction.reaction_type, (counts.get(reaction.reaction_type) ?? 0) + 1);
         }
         return (
-          <article className="rounded-lg border border-line bg-white/85 p-5 shadow-sm" key={message.id}>
-            <p className="text-sm font-bold text-neutral-500">{message.room?.name ?? "cigtime"}</p>
-            <p className="mt-2 text-lg font-semibold leading-7">{message.body}</p>
+          <article className="rounded-2xl border border-white/10 bg-slate p-6" key={message.id}>
+            <p className="text-sm text-fog">{message.room?.name ?? "cigtime"}</p>
+            <p className="mt-2 text-lg leading-relaxed text-mist">{message.body}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {[...counts].map(([reaction, count]) => (
-                <span className="rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-black" key={reaction}>
+                <span className="rounded-full bg-sodium/15 px-3 py-1 text-xs font-semibold text-sodium" key={reaction}>
                   {reaction} {count}
                 </span>
               ))}
