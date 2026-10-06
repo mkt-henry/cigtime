@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Big_Shoulders, Instrument_Sans } from "next/font/google";
 import { pickLang, t } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
@@ -8,18 +8,20 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsTracker } from "@/components/common/AnalyticsTracker";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Condensed signage lettering for headlines, a plain humanist sans for everything you read.
+const display = Big_Shoulders({
+  variable: "--font-display",
+  subsets: ["latin", "latin-ext"],
+  weight: ["700", "900"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const body = Instrument_Sans({
+  variable: "--font-body",
+  subsets: ["latin", "latin-ext"],
 });
 
 export const viewport: Viewport = {
-  themeColor: "#171717",
+  themeColor: "#161c24",
   viewportFit: "cover",
 };
 
@@ -53,7 +55,7 @@ export default async function RootLayout({
   const lang = pickLang((await headers()).get("accept-language"));
 
   return (
-    <html className={`${geistSans.variable} ${geistMono.variable}`} lang={lang}>
+    <html className={`${display.variable} ${body.variable}`} lang={lang}>
       <body>
         <AnalyticsTracker />
         {children}

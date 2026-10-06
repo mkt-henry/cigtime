@@ -10,15 +10,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#171717",
-        paper: "#f5f5f2",
-        line: "#d8d8d0",
-        moss: "#2f6f5f",
-        rust: "#a94722",
-        ember: "#f2a65a",
+        // Night palette: the smoking spot outside the office, lit by a sodium lamp.
+        asphalt: "#161c24",
+        slate: "#222a35",
+        fog: "#a9b2be",
+        mist: "#e9ecf0",
+        sodium: "#f2a23c",
+        ember: "#e0612f",
+      },
+      fontFamily: {
+        sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Impact", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 18px 70px rgba(23, 23, 23, 0.12)",
+        soft: "0 24px 80px rgba(5, 8, 12, 0.55)",
       },
     },
   },

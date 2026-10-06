@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowLeft, ImagePlus, RotateCcw, Send, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, RotateCcw, Send, Trash2 } from "lucide-react";
 import { MotionConfig, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { Button } from "@/components/common/Button";
+import { Button, LinkButton } from "@/components/common/Button";
 import {
   REACTIONS,
   RITUAL_OBJECTS,
@@ -531,7 +531,7 @@ export function RoomShell({ room }: { room: Room }) {
   if (!anonymousUser) {
     return (
       <main className="grid min-h-screen place-items-center px-4">
-        <p className="rounded-md border border-line bg-white px-4 py-3 font-semibold">{copy.opening}</p>
+        <p className="text-fog">{copy.opening}</p>
       </main>
     );
   }
@@ -578,25 +578,26 @@ export function RoomShell({ room }: { room: Room }) {
 
       <AmbientCanvas intensity={timer.isAccelerating ? 2.2 : 1} />
 
-      <SharedAshtray count={todayCigaretteCount} label={copy.ashtrayLabel(todayCigaretteCount)} />
+      <SharedAshtray label={copy.ashtrayLabel(todayCigaretteCount)} />
 
       {/* Top HUD */}
       <div
-        className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-4 py-3"
+        className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-3 px-4 py-4 sm:flex-nowrap sm:px-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
             aria-label={copy.backToRooms}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-asphalt/45 text-mist backdrop-blur-md transition hover:bg-asphalt/70"
             href="/rooms"
           >
             <ArrowLeft size={18} aria-hidden />
           </Link>
-          <div className="rounded-md bg-black/30 px-2.5 py-1 backdrop-blur-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/65">{room.name}</p>
-            <p className="text-sm font-bold leading-tight text-white drop-shadow">{anonymousUser.nickname}</p>
-            <p className="text-[10px] font-semibold text-white/60">
+          <div className="min-w-0 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+            <p className="truncate font-display text-2xl font-black uppercase leading-none text-mist">{room.name}</p>
+            <p className="mt-1 truncate text-xs text-fog">
+              <span className="hidden sm:inline">{anonymousUser.nickname}</span>
+              <span className="mx-1.5 hidden h-1 w-1 rounded-full bg-fog/60 align-middle sm:inline-block" aria-hidden />
               {connectionStatus === "live"
                 ? copy.online(onlineCount)
                 : connectionStatus === "connecting"
@@ -605,74 +606,73 @@ export function RoomShell({ room }: { room: Room }) {
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-          <div className="order-last flex items-center gap-2 sm:order-first">
-          <select
-            aria-label={copy.objectLabel}
-            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-            onChange={(event) => setObjectKey(event.target.value)}
-            value={objectKey}
-          >
-            {RITUAL_OBJECTS.map((object) => (
-              <option className="bg-neutral-900 text-white" key={object.key} value={object.key}>
-                {object.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label={copy.durationLabel}
-            className="h-9 rounded-md border border-white/20 bg-black/30 px-2 text-sm font-bold text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-            onChange={(event) => changeDuration(Number(event.target.value))}
-            value={durationSec}
-          >
-            {SESSION_DURATION_OPTIONS.map((seconds) => (
-              <option className="bg-neutral-900 text-white" key={seconds} value={seconds}>
-                {copy.durationOption(seconds / 60)}
-              </option>
-            ))}
-          </select>
-          <input
-            accept="image/*"
-            className="sr-only"
-            onChange={(event) => void updateRoomBackground(event.target.files?.[0])}
-            ref={backgroundInputRef}
-            type="file"
-          />
-          <button
-            aria-label={copy.uploadBackground}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
-            onClick={() => backgroundInputRef.current?.click()}
-            type="button"
-          >
-            <ImagePlus size={16} aria-hidden />
-          </button>
-          {roomBackground && (
+        <div className="contents sm:flex sm:items-center sm:gap-4">
+          <div className="order-last flex h-10 items-center divide-x divide-white/10 rounded-full border border-white/15 bg-asphalt/45 px-1 text-sm text-mist backdrop-blur-md max-sm:ml-auto sm:order-first">
+            <select
+              aria-label={copy.objectLabel}
+              className="h-full cursor-pointer rounded-full bg-transparent pl-3 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-sodium"
+              onChange={(event) => setObjectKey(event.target.value)}
+              value={objectKey}
+            >
+              {RITUAL_OBJECTS.map((object) => (
+                <option className="bg-slate text-mist" key={object.key} value={object.key}>
+                  {object.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label={copy.durationLabel}
+              className="h-full cursor-pointer bg-transparent pl-3 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-sodium"
+              onChange={(event) => changeDuration(Number(event.target.value))}
+              value={durationSec}
+            >
+              {SESSION_DURATION_OPTIONS.map((seconds) => (
+                <option className="bg-slate text-mist" key={seconds} value={seconds}>
+                  {copy.durationOption(seconds / 60)}
+                </option>
+              ))}
+            </select>
+            <input
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) => void updateRoomBackground(event.target.files?.[0])}
+              ref={backgroundInputRef}
+              type="file"
+            />
             <button
-              aria-label={copy.removeBackground}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/45"
-              onClick={removeRoomBackground}
+              aria-label={copy.uploadBackground}
+              className="inline-flex h-full w-10 items-center justify-center text-fog transition hover:text-mist"
+              onClick={() => backgroundInputRef.current?.click()}
               type="button"
             >
-              <Trash2 size={15} aria-hidden />
+              <ImagePlus size={16} aria-hidden />
             </button>
-          )}
+            {roomBackground && (
+              <button
+                aria-label={copy.removeBackground}
+                className="inline-flex h-full w-10 items-center justify-center text-fog transition hover:text-mist"
+                onClick={removeRoomBackground}
+                type="button"
+              >
+                <Trash2 size={15} aria-hidden />
+              </button>
+            )}
           </div>
           <div
             aria-label={`${minutes}:${seconds}`}
-            className={`inline-flex items-center gap-1.5 rounded-md bg-black/30 px-3 py-2 font-mono text-sm font-black tabular-nums text-white backdrop-blur-sm ${
-              timer.remainingSec > 0 && timer.remainingSec <= 10 ? "pulse-soft" : ""
+            className={`font-display text-4xl font-black leading-none tabular-nums drop-shadow-[0_1px_10px_rgba(0,0,0,0.5)] ${
+              timer.remainingSec > 0 && timer.remainingSec <= 10 ? "pulse-soft text-sodium" : "text-mist"
             }`}
             role="timer"
           >
-            <Timer size={14} aria-hidden />
             {minutes}:{seconds}
           </div>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="absolute inset-x-0 bottom-0 z-10 h-0.5 bg-white/10">
-        <div className="h-full bg-moss transition-all duration-300" style={{ width: `${timer.progress * 100}%` }} />
+      <div className="absolute inset-x-0 bottom-0 z-10 h-[3px] bg-white/10">
+        <div className="h-full bg-sodium transition-all duration-300" style={{ width: `${timer.progress * 100}%` }} />
       </div>
 
       {/* Floating messages */}
@@ -692,8 +692,8 @@ export function RoomShell({ room }: { room: Room }) {
 
       {/* Tap hint */}
       {!showInput && visibleMessages.length === 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-7 z-10 text-center">
-          <p className="text-xs font-medium text-white/60 drop-shadow">
+        <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center">
+          <p className="text-sm text-mist/70 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
           </p>
         </div>
@@ -702,14 +702,14 @@ export function RoomShell({ room }: { room: Room }) {
       {/* Chat input overlay */}
       {showInput && (
         <div
-          className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-16"
+          className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-asphalt/90 via-asphalt/40 to-transparent px-4 pb-6 pt-20"
           onClick={(e) => e.stopPropagation()}
         >
-          <form className="flex flex-col gap-2" onSubmit={send}>
-            <div className="flex gap-2">
+          <form className="mx-auto flex max-w-xl flex-col gap-2" onSubmit={send}>
+            <div className="flex h-14 items-center gap-2 rounded-full border border-white/15 bg-asphalt/60 pl-5 pr-1.5 backdrop-blur-md transition focus-within:border-sodium/70">
               <input
                 autoComplete="off"
-                className="h-11 min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-4 text-sm font-medium text-white placeholder:text-white/40 outline-none backdrop-blur-md transition focus:border-white/50 focus:bg-white/15"
+                className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-mist outline-none placeholder:text-fog/70"
                 disabled={room.isSilent || isSending}
                 maxLength={140}
                 onChange={(event) => setInputBody(event.target.value)}
@@ -725,24 +725,20 @@ export function RoomShell({ room }: { room: Room }) {
               />
               <button
                 aria-label={copy.sendThought}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-moss text-white transition hover:brightness-110 disabled:opacity-50"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sodium text-asphalt transition hover:bg-[#f7b55a] active:scale-95 disabled:opacity-40"
                 disabled={room.isSilent || isSending || !activeSessionId}
                 type="submit"
               >
                 <Send size={18} aria-hidden />
               </button>
             </div>
-            <div className="flex items-center justify-between px-1">
-              <p className="text-xs font-medium">
-                {inputError ? (
-                  <span className="text-rust">{inputError}</span>
-                ) : (
-                  <span className="text-white/35">
-                    {connectionStatus === "live" ? copy.liveRoom : copy.connectingRoom}
-                  </span>
-                )}
-              </p>
-              <p className="text-xs font-medium text-white/35">{inputBody.length}/140</p>
+            <div className="flex items-center justify-between px-5 text-xs">
+              {inputError ? (
+                <span className="text-ember">{inputError}</span>
+              ) : (
+                <span className="text-fog/80">{connectionStatus === "live" ? copy.liveRoom : copy.connectingRoom}</span>
+              )}
+              <span className="tabular-nums text-fog/80">{inputBody.length}/140</span>
             </div>
           </form>
         </div>
@@ -752,38 +748,37 @@ export function RoomShell({ room }: { room: Room }) {
       {timer.isDone && (
         <motion.section
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-40 grid place-items-center bg-ink/45 px-4 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 grid place-items-center bg-asphalt/60 px-4 backdrop-blur-md"
           initial={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
         >
           <motion.div
             animate="show"
-            className="w-full max-w-md rounded-lg border border-line bg-white p-6 shadow-soft"
+            className="w-full max-w-md rounded-3xl border border-white/10 bg-slate/95 p-8 shadow-soft"
             initial="hidden"
             variants={{
               hidden: { opacity: 0, y: 28, scale: 0.96 },
               show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 140, damping: 18, delayChildren: 0.25, staggerChildren: 0.12 } },
             }}
           >
-            <motion.h2 className="text-3xl font-black" variants={riseIn}>{copy.endTitle}</motion.h2>
-            <motion.p className="mt-4 text-lg leading-7 text-neutral-700" variants={riseIn}>{copy.endDropped(droppedCount)}</motion.p>
-            <motion.p className="mt-1 text-sm font-semibold text-neutral-500" variants={riseIn}>
+            <motion.h2 className="font-display text-6xl font-black uppercase leading-[0.85] text-mist" variants={riseIn}>
+              {copy.endTitle}
+            </motion.h2>
+            <motion.p className="mt-6 text-lg text-mist" variants={riseIn}>{copy.endDropped(droppedCount)}</motion.p>
+            <motion.p className="mt-1 text-fog" variants={riseIn}>
               {copy.endReactions(reactionsReceived)}
             </motion.p>
-            <motion.div className="mt-6 flex flex-col gap-3" variants={riseIn}>
-              <ShareCard thought={lastThought} lang={lang} />
+            <motion.div className="mt-8 flex flex-col gap-3" variants={riseIn}>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button onClick={restart} type="button">
+                <Button className="flex-1" onClick={restart} type="button">
                   <RotateCcw size={18} aria-hidden />
                   {copy.takeAnother}
                 </Button>
-                <Link
-                  className="inline-flex h-11 items-center justify-center rounded-md border border-line px-4 text-sm font-semibold hover:border-ink"
-                  href="/"
-                >
+                <LinkButton className="flex-1" href="/" variant="secondary">
                   {copy.leaveLighter}
-                </Link>
+                </LinkButton>
               </div>
+              <ShareCard thought={lastThought} lang={lang} />
             </motion.div>
           </motion.div>
         </motion.section>
@@ -793,36 +788,12 @@ export function RoomShell({ room }: { room: Room }) {
   );
 }
 
-function SharedAshtray({ count, label }: { count: number; label: string }) {
-  const visibleCount = Math.min(24, Math.max(0, count));
-  const butts = Array.from({ length: visibleCount }, (_, index) => ({
-    bottom: 9 + (index % 3) * 8 + Math.floor(index / 12) * 3,
-    left: 10 + ((index * 29) % 82),
-    rotate: -18 + ((index * 37) % 72),
-  }));
-
+// How many cigarettes everyone finished today, as a quiet line in the corner.
+function SharedAshtray({ label }: { label: string }) {
   return (
-    <div
-      aria-label={label}
-      role="img"
-      className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-2"
-    >
-      <div className="relative h-20 w-[min(28rem,82vw)]">
-        <div className="absolute bottom-0 left-1/2 h-8 w-full -translate-x-1/2 rounded-[50%] border border-white/10 bg-black/30 backdrop-blur-[1px]" />
-        <div className="absolute bottom-1 left-1/2 h-4 w-[86%] -translate-x-1/2 rounded-[50%] bg-black/20" />
-        {butts.map((butt, index) => (
-          <span
-            className="absolute h-3 w-9 rounded-[3px] border border-black/15 bg-[linear-gradient(90deg,#9a6842_0_34%,#e9dfc8_34%_78%,#5f5f58_78%_100%)] shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
-            key={index}
-            style={{
-              bottom: `${butt.bottom}px`,
-              left: `${butt.left}%`,
-              transform: `translateX(-50%) rotate(${butt.rotate}deg)`,
-            }}
-          />
-        ))}
-      </div>
-    </div>
+    <p className="pointer-events-none absolute bottom-5 left-5 z-10 hidden text-xs text-fog/80 drop-shadow sm:block">
+      {label}
+    </p>
   );
 }
 
@@ -863,14 +834,7 @@ function FloatingMessage({
         transition={{ duration: 5 + seed * 3, ease: "easeInOut", repeat: Infinity, delay: seed * 2 }}
       >
       <motion.div
-        className="relative rounded-xl px-5 py-3 text-center text-sm font-medium text-white shadow-xl backdrop-blur-sm"
-        style={{
-          background: "rgba(12, 12, 12, 0.62)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          maxWidth: "100%",
-          overflow: "visible",
-          wordBreak: "break-word",
-        }}
+        className="relative max-w-full break-words rounded-2xl border border-white/10 bg-asphalt/60 px-5 py-3.5 text-center text-[15px] leading-snug text-mist shadow-soft backdrop-blur-md"
         initial={{ opacity: 0, y: 18, scale: 0.9, filter: "blur(6px)" }}
         animate={
           isDisappearing
@@ -881,8 +845,8 @@ function FloatingMessage({
                 scale: 1,
                 filter: "blur(0px)",
                 boxShadow: isAmbient
-                  ? "0 0 0 0 rgba(242,166,90,0)"
-                  : ["0 0 0 3px rgba(242,166,90,0.55)", "0 0 0 0 rgba(242,166,90,0)"],
+                  ? "0 0 0 0 rgba(242,162,60,0)"
+                  : ["0 0 0 3px rgba(242,162,60,0.6)", "0 0 0 0 rgba(242,162,60,0)"],
               }
         }
         transition={
@@ -896,7 +860,7 @@ function FloatingMessage({
         }
         whileHover={{ scale: 1.03 }}
       >
-        <p className="text-[10px] font-bold text-white/55">
+        <p className="text-xs text-fog">
           {isMine ? copy.you : message.message.nickname}
         </p>
         <p className="mt-1">{message.message.body}</p>
@@ -908,7 +872,7 @@ function FloatingMessage({
           />
         )}
         {!isAmbient && (
-          <div className="mt-2 flex flex-wrap justify-center gap-1">
+          <div className="mt-2.5 flex flex-wrap justify-center gap-1">
             {REACTIONS.map((reactionType) => {
               const reactions = message.message.reactions.filter(
                 (reaction) => reaction.reaction_type === reactionType,
@@ -921,8 +885,8 @@ function FloatingMessage({
                   aria-pressed={active}
                   whileTap={{ scale: 0.82 }}
                   whileHover={{ scale: 1.08 }}
-                  className={`rounded px-2 py-1 text-[11px] font-bold transition focus-visible:ring-2 focus-visible:ring-white/70 ${
-                    active ? "bg-moss text-white" : "bg-white/10 text-white/65 hover:bg-white/20"
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition focus-visible:ring-2 focus-visible:ring-sodium ${
+                    active ? "bg-sodium text-asphalt" : "bg-white/10 text-fog hover:bg-white/20 hover:text-mist"
                   }`}
                   key={reactionType}
                   disabled={isMine}

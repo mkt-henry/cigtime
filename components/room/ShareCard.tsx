@@ -66,7 +66,7 @@ export function ShareCard({ thought, lang }: { thought: string | null; lang: Sha
 
   return (
     <button
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line px-4 text-sm font-semibold transition hover:border-ink"
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-full px-4 text-sm text-fog transition hover:text-mist"
       onClick={handleShare}
       type="button"
     >
@@ -103,17 +103,19 @@ function renderShareImage(
     }
 
     // Background — ink with a warm ember glow rising from the bottom.
-    ctx.fillStyle = "#171717";
+    ctx.fillStyle = "#161c24";
     ctx.fillRect(0, 0, size, size);
     const glow = ctx.createRadialGradient(size / 2, size + 120, 80, size / 2, size + 120, 720);
-    glow.addColorStop(0, "rgba(242, 166, 90, 0.35)");
-    glow.addColorStop(1, "rgba(242, 166, 90, 0)");
+    glow.addColorStop(0, "rgba(242, 162, 60, 0.35)");
+    glow.addColorStop(1, "rgba(242, 162, 60, 0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, size, size);
 
+    const display = getComputedStyle(document.body).getPropertyValue("--font-display").trim() || "Impact";
+
     // Wordmark.
     ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.font = "600 34px ui-sans-serif, system-ui, sans-serif";
+    ctx.font = `900 44px ${display}, sans-serif`;
     ctx.textAlign = "left";
     ctx.fillText("cigtime", 80, 110);
 
@@ -127,9 +129,9 @@ function renderShareImage(
 
     // Footer tagline + url.
     ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = "700 38px ui-sans-serif, system-ui, sans-serif";
+    ctx.font = `900 52px ${display}, sans-serif`;
     ctx.fillText(tagline, size / 2, size - 150);
-    ctx.fillStyle = "#f2a65a";
+    ctx.fillStyle = "#f2a23c";
     ctx.font = "600 30px ui-sans-serif, system-ui, sans-serif";
     ctx.fillText(url.replace(/^https?:\/\//, ""), size / 2, size - 100);
 
