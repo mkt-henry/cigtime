@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Big_Shoulders, Instrument_Sans } from "next/font/google";
 import { pickLang, t } from "@/lib/i18n";
-import { SITE_URL } from "@/lib/site";
+import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION, SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsTracker } from "@/components/common/AnalyticsTracker";
+import { ThirdPartyAnalytics } from "@/components/common/ThirdPartyAnalytics";
 import "./globals.css";
 
 // Condensed signage lettering for headlines, a plain humanist sans for everything you read.
@@ -30,19 +31,26 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: "cigtime",
+    title: { default: copy.metaTitle, template: "%s | cigtime" },
     description: copy.metaDescription,
+    applicationName: "cigtime",
+    alternates: { canonical: "/" },
     openGraph: {
-      title: "cigtime",
+      title: copy.metaTitle,
       description: copy.metaDescription,
       siteName: "cigtime",
       type: "website",
-      url: SITE_URL,
+      url: "/",
+      locale: copy === t("es") ? "es_ES" : "en_US",
     },
     twitter: {
       card: "summary_large_image",
-      title: "cigtime",
+      title: copy.metaTitle,
       description: copy.metaDescription,
+    },
+    verification: {
+      google: GOOGLE_SITE_VERIFICATION || undefined,
+      other: BING_SITE_VERIFICATION ? { "msvalidate.01": BING_SITE_VERIFICATION } : undefined,
     },
   };
 }
@@ -61,6 +69,7 @@ export default async function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
+        <ThirdPartyAnalytics />
       </body>
     </html>
   );

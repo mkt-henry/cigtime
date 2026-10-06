@@ -2,6 +2,12 @@ import { headers } from "next/headers";
 import { SiteNav } from "@/components/common/SiteNav";
 import { DauChart } from "@/components/stats/DauChart";
 import { pickLang, t } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/site";
+
+export async function generateMetadata() {
+  const copy = t(pickLang((await headers()).get("accept-language")));
+  return pageMetadata({ title: copy.statsTitle, description: copy.statsSubtitle, path: "/stats", noIndex: true });
+}
 
 export default async function StatsPage() {
   const copy = t(pickLang((await headers()).get("accept-language")));

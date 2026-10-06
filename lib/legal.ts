@@ -23,6 +23,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
         body: [
           "Sessions (room, ritual object, start and end time), messages, reactions, and reports, all keyed to the anonymous ID.",
           "Product analytics events such as entering a room or completing a session. They are counted, never sold or shared.",
+          "We use Google Analytics, Microsoft Clarity and Vercel Analytics to understand how the site is used (pages visited, clicks and scrolling, device and approximate region). They set their own cookies; messages you write are never sent to them.",
         ],
       },
       {
@@ -131,6 +132,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
         body: [
           "Sesiones (sala, objeto, inicio y fin), mensajes, reacciones y reportes, siempre ligados al identificador anónimo.",
           "Eventos de producto como entrar en una sala o completar una sesión. Se cuentan; nunca se venden ni se comparten.",
+          "Usamos Google Analytics, Microsoft Clarity y Vercel Analytics para entender cómo se usa el sitio (páginas visitadas, clics y desplazamiento, dispositivo y región aproximada). Usan sus propias cookies; lo que escribes nunca se les envía.",
         ],
       },
       {

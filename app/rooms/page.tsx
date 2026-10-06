@@ -5,6 +5,12 @@ import { SiteNav } from "@/components/common/SiteNav";
 import { ROOMS } from "@/lib/constants";
 import { pickLang, t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
+import { pageMetadata } from "@/lib/site";
+
+export async function generateMetadata() {
+  const copy = t(pickLang((await headers()).get("accept-language")));
+  return pageMetadata({ title: copy.navRooms, description: copy.metaRooms, path: "/rooms" });
+}
 
 export default async function RoomsPage() {
   const lang = pickLang((await headers()).get("accept-language"));

@@ -79,7 +79,11 @@ const EN = {
   errorReaction: "Reaction could not be saved.",
   errorReport: "Report could not be submitted.",
 
-  metaDescription: "Take your cigtime. A place to let it out.",
+  metaTitle: "cigtime: a one-minute anonymous break",
+  metaDescription:
+    "Step out for a minute. cigtime is an anonymous online smoke-break room: say one line, get a quiet reaction, and head back lighter. No sign-up.",
+  metaRooms: "Pick a room for your break: a rooftop, a fire escape, a back step, a convenience store or a silent balcony. Anonymous, one minute.",
+  metaRoom: (name: string, description: string) => `${name}: ${description} A one-minute anonymous room on cigtime.`,
 
   notFoundTitle: "Nothing here.",
   notFoundBody: "This page burned out. The rooms are still open.",
@@ -174,7 +178,11 @@ const ES: Copy = {
   errorReaction: "No se pudo guardar la reacción.",
   errorReport: "No se pudo enviar el reporte.",
 
-  metaDescription: "Tómate tu cigtime. Un lugar para desahogarte.",
+  metaTitle: "cigtime: un descanso anónimo de un minuto",
+  metaDescription:
+    "Sal un minuto. cigtime es una sala anónima para tu pausa: di una línea, recibe una reacción tranquila y vuelve más ligero. Sin registro.",
+  metaRooms: "Elige una sala para tu pausa: una azotea, una escalera de incendios, un escalón trasero, una tienda o un balcón en silencio. Anónimo, un minuto.",
+  metaRoom: (name: string, description: string) => `${name}: ${description} Una sala anónima de un minuto en cigtime.`,
 
   notFoundTitle: "Aquí no hay nada.",
   notFoundBody: "Esta página se consumió. Las salas siguen abiertas.",

@@ -19,6 +19,9 @@ export async function trackEvent(input: {
   roomSlug?: string;
   sessionId?: string | null;
 }) {
+  const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+  gtag?.("event", input.eventName, { room_slug: input.roomSlug });
+
   try {
     await fetch("/api/analytics", {
       body: JSON.stringify(input),
