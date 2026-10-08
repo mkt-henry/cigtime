@@ -24,8 +24,9 @@ export function pageMetadata({
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path, siteName: "cigtime", type: "website" },
-    twitter: { card: "summary_large_image", title, description },
+    // Nested pages that set openGraph lose the root file-based image, so point at it explicitly.
+    openGraph: { title, description, url: path, siteName: "cigtime", type: "website", images: "/opengraph-image" },
+    twitter: { card: "summary_large_image", title, description, images: "/opengraph-image" },
     ...(noIndex ? { robots: { index: false, follow: true } } : {}),
   };
 }

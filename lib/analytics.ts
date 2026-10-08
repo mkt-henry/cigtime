@@ -9,6 +9,7 @@ export const ANALYTICS_EVENTS = [
   "reaction_received",
   "session_completed",
   "session_restarted",
+  "share_clicked",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
