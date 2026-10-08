@@ -2,6 +2,7 @@
 
 import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
+import { SITE_URL } from "@/lib/site";
 
 type ShareLang = "en" | "es";
 
@@ -20,24 +21,31 @@ const COPY: Record<ShareLang, { button: string; done: string; caption: string; t
   },
 };
 
-function getSiteUrl() {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-  }
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://cigtime.app";
-}
-
-export function ShareCard({ thought, lang }: { thought: string | null; lang: ShareLang }) {
+export function ShareCard({
+  compact = false,
+  lang,
+  onShare,
+  roomSlug,
+  thought,
+}: {
+  compact?: boolean;
+  lang: ShareLang;
+  onShare?: () => void;
+  roomSlug: string;
+  thought: string | null;
+}) {
   const [done, setDone] = useState(false);
   const copy = COPY[lang];
 
   async function handleShare() {
-    const url = getSiteUrl();
+    onShare?.();
+    // Land friends in the same room; utm_source lets GA count visits that came from shares.
+    const url = `${SITE_URL}/room/${roomSlug}?utm_source=share`;
     const quoted = thought ? `"${thought}"` : copy.tagline;
     const text = `${quoted}\n\n${copy.caption}`;
 
     try {
-      const blob = await renderShareImage(thought, copy.tagline, url);
+      const blob = await renderShareImage(thought, copy.tagline, SITE_URL);
       const file = blob ? new File([blob], "cigtime.png", { type: "image/png" }) : null;
 
       const navAny = navigator as Navigator & {
@@ -45,7 +53,8 @@ export function ShareCard({ thought, lang }: { thought: string | null; lang: Sha
       };
 
       if (file && navAny.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({ files: [file], text, title: "cigtime" });
+        // Share sheets drop `url` when files are attached, so the link rides in the text.
+        await navigator.share({ files: [file], text: `${text}\n${url}`, title: "cigtime" });
         return;
       }
 
@@ -62,6 +71,20 @@ export function ShareCard({ thought, lang }: { thought: string | null; lang: Sha
     } catch {
       // User cancelled the native sheet, or sharing is unavailable — no-op.
     }
+  }
+
+  if (compact) {
+    return (
+      <button
+        aria-label={copy.button}
+        className="inline-flex h-full w-10 items-center justify-center text-fog transition hover:text-mist"
+        onClick={handleShare}
+        title={done ? copy.done : copy.button}
+        type="button"
+      >
+        {done ? <Check size={16} aria-hidden /> : <Share2 size={16} aria-hidden />}
+      </button>
+    );
   }
 
   return (

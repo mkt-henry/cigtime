@@ -485,6 +485,16 @@ export function RoomShell({ room }: { room: Room }) {
     setInputError(data?.error ?? copy.errorReport);
   }
 
+  function trackShare() {
+    if (!anonymousUser) return;
+    void trackEvent({
+      anonymousUserId: anonymousUser.id,
+      eventName: "share_clicked",
+      roomSlug: room.slug,
+      sessionId: activeSessionId,
+    });
+  }
+
   function restart() {
     timer.restart();
     setDroppedCount(0);
@@ -657,6 +667,7 @@ export function RoomShell({ room }: { room: Room }) {
                 <Trash2 size={15} aria-hidden />
               </button>
             )}
+            <ShareCard compact lang={lang} onShare={trackShare} roomSlug={room.slug} thought={lastThought} />
           </div>
           <div
             aria-label={`${minutes}:${seconds}`}
@@ -778,7 +789,7 @@ export function RoomShell({ room }: { room: Room }) {
                   {copy.leaveLighter}
                 </LinkButton>
               </div>
-              <ShareCard thought={lastThought} lang={lang} />
+              <ShareCard lang={lang} onShare={trackShare} roomSlug={room.slug} thought={lastThought} />
             </motion.div>
           </motion.div>
         </motion.section>
