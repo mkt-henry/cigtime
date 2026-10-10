@@ -197,7 +197,7 @@ function SceneBackdrop({ roomSlug }: { roomSlug: string }) {
       <div className="absolute -inset-6" style={depth(14)}>
         <picture>
           <source media="(max-width: 700px)" srcSet={scene.small} />
-          <img alt="" className="h-full w-full object-cover" decoding="async" fetchPriority="high" src={scene.large} />
+          <img alt={scene.alt} className="h-full w-full object-cover" decoding="async" fetchPriority="high" src={scene.large} />
         </picture>
       </div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(22,28,36,0.15)_0%,rgba(22,28,36,0.55)_70%,rgba(22,28,36,0.85)_100%)]" />

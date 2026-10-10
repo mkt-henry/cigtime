@@ -72,7 +72,7 @@ export async function Hero() {
               <Link className="group block" href={`/room/${room.slug}`}>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
                   <img
-                    alt=""
+                    alt={sceneFor(room.slug).alt}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                     decoding="async"
                     loading="lazy"

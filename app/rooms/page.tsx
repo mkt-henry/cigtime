@@ -32,7 +32,7 @@ export default async function RoomsPage() {
                 href={`/room/${room.slug}`}
               >
                 <img
-                  alt=""
+                  alt={sceneFor(room.slug).alt}
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                   decoding="async"
                   src={sceneFor(room.slug).small}

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { depth, useParallax } from "@/hooks/useParallax";
+import { HERO_ALT } from "@/lib/scenes";
 
 // The rooftop photo drifts a little against the pointer so the page feels like a place.
 export function HeroBackdrop() {
@@ -14,7 +15,7 @@ export function HeroBackdrop() {
         <picture>
           <source media="(max-width: 700px)" srcSet="/scenes/hero-sm.webp" />
           <img
-            alt=""
+            alt={HERO_ALT}
             className="h-full w-full object-cover object-[30%_center]"
             decoding="async"
             fetchPriority="high"
