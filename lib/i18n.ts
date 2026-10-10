@@ -26,6 +26,7 @@ const EN = {
   navGuidelines: "Guidelines",
   navPrivacy: "Privacy",
   navTerms: "Terms",
+  navCoffee: "Buy me a coffee",
 
   roomsTitle: "Where are you stepping out?",
   roomsSubtitle: "Pick a room. A minute or a few, then you leave lighter.",
@@ -125,6 +126,7 @@ const ES: Copy = {
   navGuidelines: "Normas",
   navPrivacy: "Privacidad",
   navTerms: "Términos",
+  navCoffee: "Invítame un café",
 
   roomsTitle: "¿A dónde sales?",
   roomsSubtitle: "Elige una sala. Un minuto o unos pocos, y sales más ligero.",

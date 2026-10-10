@@ -8,7 +8,7 @@ export async function SiteFooter() {
   return (
     <footer className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-white/10 px-5 py-8 text-sm text-fog sm:px-8">
       <span className="font-display text-lg font-black lowercase tracking-wide text-mist">cigtime</span>
-      <nav className="flex gap-5">
+      <nav className="flex flex-wrap gap-x-5 gap-y-2">
         <Link className="transition hover:text-mist" href="/guidelines">
           {copy.navGuidelines}
         </Link>
@@ -18,6 +18,14 @@ export async function SiteFooter() {
         <Link className="transition hover:text-mist" href="/terms">
           {copy.navTerms}
         </Link>
+        <a
+          className="text-sodium transition hover:text-mist"
+          href="https://buymeacoffee.com/bpark0718z"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {copy.navCoffee}
+        </a>
       </nav>
     </footer>
   );
