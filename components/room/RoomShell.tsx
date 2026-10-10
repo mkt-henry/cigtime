@@ -956,7 +956,7 @@ function createAmbientMessages(roomSlug: string): FloatingMsg[] {
     // Spread them out instead of stacking three random targets on top of each other.
     target: getMessageTarget(
       window.innerWidth * (index % 2 === 0 ? 0.32 : 0.68),
-      isNarrow() ? (index === 0 ? 0 : window.innerHeight) : window.innerHeight * (0.28 + index * 0.2),
+      isNarrow() ? (index === 0 ? 0 : window.innerHeight / 2 + 200) : window.innerHeight * (0.28 + index * 0.2),
     ),
   }));
 }
@@ -1009,7 +1009,7 @@ function clearOfObject(y: number) {
   const height = window.innerHeight;
   const hudBottom = 184;
   const above = Math.max(hudBottom, height / 2 - 155);
-  const below = Math.min(height - 80, height / 2 + 200);
+  const below = Math.min(height - 130, height / 2 + 200);
   const clamped = clamp(y, hudBottom, height - 80);
   if (clamped <= above || clamped >= below) return clamped;
   return clamped - above < below - clamped ? above : below;
