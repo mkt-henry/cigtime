@@ -617,7 +617,7 @@ export function RoomShell({ room }: { room: Room }) {
           </div>
         </div>
         <div className="contents sm:flex sm:items-center sm:gap-4">
-          <div className="order-last flex h-10 items-center divide-x divide-white/10 rounded-full border border-white/15 bg-asphalt/45 px-1 text-sm text-mist backdrop-blur-md max-sm:ml-auto sm:order-first">
+          <div className="order-last flex h-10 items-center divide-x divide-white/10 rounded-full border border-white/15 bg-asphalt/45 px-1 text-base text-mist sm:text-sm backdrop-blur-md max-sm:ml-auto sm:order-first">
             <select
               aria-label={copy.objectLabel}
               className="h-full cursor-pointer rounded-full bg-transparent pl-3 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-sodium"
@@ -688,7 +688,7 @@ export function RoomShell({ room }: { room: Room }) {
 
       {/* Floating messages */}
       <div className="pointer-events-none absolute inset-0 z-10">
-        {visibleMessages.slice(-6).map((msg) => (
+        {visibleMessages.slice(isNarrow() ? -3 : -6).map((msg) => (
           <FloatingMessage
             anonymousUserId={anonymousUser.id}
             key={msg.message.id}
@@ -702,7 +702,7 @@ export function RoomShell({ room }: { room: Room }) {
       </div>
 
       {/* Tap hint */}
-      {!showInput && visibleMessages.length === 0 && (
+      {!showInput && droppedCount === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center">
           <p className="text-sm text-mist/70 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
@@ -720,7 +720,7 @@ export function RoomShell({ room }: { room: Room }) {
             <div className="flex h-14 items-center gap-2 rounded-full border border-white/15 bg-asphalt/60 pl-5 pr-1.5 backdrop-blur-md transition focus-within:border-sodium/70">
               <input
                 autoComplete="off"
-                className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-mist outline-none placeholder:text-fog/70"
+                className="h-full min-w-0 flex-1 bg-transparent text-base text-mist sm:text-[15px] outline-none placeholder:text-fog/70"
                 disabled={room.isSilent || isSending}
                 maxLength={140}
                 onChange={(event) => setInputBody(event.target.value)}
@@ -896,7 +896,7 @@ function FloatingMessage({
                   aria-pressed={active}
                   whileTap={{ scale: 0.82 }}
                   whileHover={{ scale: 1.08 }}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition focus-visible:ring-2 focus-visible:ring-sodium ${
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium sm:px-2.5 sm:py-1 transition focus-visible:ring-2 focus-visible:ring-sodium ${
                     active ? "bg-sodium text-asphalt" : "bg-white/10 text-fog hover:bg-white/20 hover:text-mist"
                   }`}
                   key={reactionType}
@@ -941,7 +941,7 @@ function createAmbientMessages(roomSlug: string): FloatingMsg[] {
   const pool = getAmbientMessages(typeof navigator === "undefined" ? "en" : navigator.language);
   const now = Date.now();
 
-  return Array.from({ length: 3 }, (_, index) => ({
+  return Array.from({ length: isNarrow() ? 2 : 3 }, (_, index) => ({
     message: {
       id: `${AMBIENT_PREFIX}${index}`,
       roomSlug,
@@ -956,7 +956,7 @@ function createAmbientMessages(roomSlug: string): FloatingMsg[] {
     // Spread them out instead of stacking three random targets on top of each other.
     target: getMessageTarget(
       window.innerWidth * (index % 2 === 0 ? 0.32 : 0.68),
-      window.innerHeight * (0.28 + index * 0.2),
+      isNarrow() ? (index === 0 ? 0 : window.innerHeight) : window.innerHeight * (0.28 + index * 0.2),
     ),
   }));
 }
@@ -973,14 +973,14 @@ function getMessageTarget(x: number, y: number): MessageTarget {
 
   return {
     x: clamp(x, horizontalMargin, window.innerWidth - horizontalMargin),
-    y: clamp(y, verticalMargin, window.innerHeight - verticalMargin),
+    y: clearOfObject(clamp(y, verticalMargin, window.innerHeight - verticalMargin)),
   };
 }
 
 function getDefaultMessageTarget(): MessageTarget {
   return {
     x: window.innerWidth / 2,
-    y: window.innerHeight * 0.55,
+    y: clearOfObject(window.innerHeight * 0.55),
   };
 }
 
@@ -992,8 +992,27 @@ function getRandomMessageTarget(): MessageTarget {
       horizontalMargin,
       window.innerWidth - horizontalMargin,
     ),
-    y: clamp(window.innerHeight * (0.24 + Math.random() * 0.48), 96, window.innerHeight - 140),
+    y: clearOfObject(clamp(window.innerHeight * (0.24 + Math.random() * 0.48), 96, window.innerHeight - 140)) +
+      (isNarrow() ? (Math.random() - 0.5) * 40 : 0),
   };
+}
+
+function isNarrow() {
+  return typeof window !== "undefined" && window.innerWidth < 640;
+}
+
+// On phones every bubble spans the middle of the screen, so they go above the
+// cigarette tip or below the filter instead of covering it (and its hold target).
+// The cigarette is drawn from about 90px above centre to 135px below it.
+function clearOfObject(y: number) {
+  if (!isNarrow()) return y;
+  const height = window.innerHeight;
+  const hudBottom = 184;
+  const above = Math.max(hudBottom, height / 2 - 155);
+  const below = Math.min(height - 80, height / 2 + 200);
+  const clamped = clamp(y, hudBottom, height - 80);
+  if (clamped <= above || clamped >= below) return clamped;
+  return clamped - above < below - clamped ? above : below;
 }
 
 function clamp(value: number, min: number, max: number) {

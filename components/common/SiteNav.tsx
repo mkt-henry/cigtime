@@ -15,10 +15,10 @@ export async function SiteNav({ overlay = false }: { overlay?: boolean }) {
         cigtime
       </Link>
       <nav className="flex items-center gap-1 text-sm text-fog">
-        <Link className="rounded-full px-3 py-2 transition hover:text-mist" href="/rooms">
+        <Link className="rounded-full px-3 py-2.5 transition hover:text-mist" href="/rooms">
           {copy.navRooms}
         </Link>
-        <Link className="rounded-full px-3 py-2 transition hover:text-mist" href="/reactions">
+        <Link className="rounded-full px-3 py-2.5 transition hover:text-mist" href="/reactions">
           {copy.navReactions}
         </Link>
         <Link className="hidden rounded-full px-3 py-2 transition hover:text-mist sm:inline-block" href="/guidelines">

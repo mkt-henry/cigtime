@@ -24,6 +24,8 @@ const body = Instrument_Sans({
 export const viewport: Viewport = {
   themeColor: "#161c24",
   viewportFit: "cover",
+  // Android Chrome: shrink the page above the keyboard so the room input stays visible.
+  interactiveWidget: "resizes-content",
 };
 
 export async function generateMetadata(): Promise<Metadata> {

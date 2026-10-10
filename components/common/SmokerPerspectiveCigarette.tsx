@@ -224,9 +224,10 @@ export function SmokerPerspectiveCigarette({
 
       <button
         aria-label="Hold cigarette filter"
-        className="absolute z-30 rounded-[3px] outline-none transition focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-default"
+        className="absolute z-30 touch-none select-none rounded-[3px] outline-none transition [-webkit-touch-callout:none] before:absolute before:-inset-3 before:content-[''] focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-default"
         disabled={pct >= 1}
         onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => e.preventDefault()}
         onBlur={onFilterHoldEnd}
         onKeyDown={(event) => {
           if (event.key === " " || event.key === "Enter") {
