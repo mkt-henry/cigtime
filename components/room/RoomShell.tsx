@@ -15,6 +15,7 @@ import {
   SESSION_DURATION_SEC,
   type ReportReason,
 } from "@/lib/constants";
+import { Picker } from "./Picker";
 import { ShareCard } from "./ShareCard";
 import { scrubMessage, validateMessage } from "@/lib/filters";
 import { t, type Lang } from "@/lib/i18n";
@@ -619,30 +620,18 @@ export function RoomShell({ room }: { room: Room }) {
         </div>
         <div className="contents sm:flex sm:items-center sm:gap-4">
           <div className="order-last flex h-10 items-center divide-x divide-white/10 rounded-full border border-white/15 bg-asphalt/45 px-1 text-base text-mist sm:text-sm backdrop-blur-md max-sm:ml-auto sm:order-first">
-            <select
-              aria-label={copy.objectLabel}
-              className="h-full cursor-pointer rounded-full bg-transparent pl-3 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-sodium"
-              onChange={(event) => setObjectKey(event.target.value)}
+            <Picker
+              label={copy.objectLabel}
+              onChange={setObjectKey}
+              options={RITUAL_OBJECTS.map((object) => ({ label: object.name, value: object.key }))}
               value={objectKey}
-            >
-              {RITUAL_OBJECTS.map((object) => (
-                <option className="bg-slate text-mist" key={object.key} value={object.key}>
-                  {object.name}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label={copy.durationLabel}
-              className="h-full cursor-pointer bg-transparent pl-3 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-sodium"
-              onChange={(event) => changeDuration(Number(event.target.value))}
+            />
+            <Picker
+              label={copy.durationLabel}
+              onChange={changeDuration}
+              options={SESSION_DURATION_OPTIONS.map((seconds) => ({ label: copy.durationOption(seconds / 60), value: seconds }))}
               value={durationSec}
-            >
-              {SESSION_DURATION_OPTIONS.map((seconds) => (
-                <option className="bg-slate text-mist" key={seconds} value={seconds}>
-                  {copy.durationOption(seconds / 60)}
-                </option>
-              ))}
-            </select>
+            />
             <input
               accept="image/*"
               className="sr-only"
