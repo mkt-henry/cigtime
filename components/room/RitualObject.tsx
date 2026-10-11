@@ -127,6 +127,20 @@ function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress
     );
   }
 
+  if (objectKey === "ballpop") {
+    // A round ball candy on a stick that shrinks towards the stick.
+    const scale = 1 - progress * 0.5;
+    return (
+      <div className="float-slow relative flex h-56 w-40 flex-col items-center">
+        <div
+          className="h-28 w-28 origin-bottom rounded-full bg-[radial-gradient(circle_at_35%_30%,#ffd0dc,#ff3d6e_55%,#b8143f)] shadow-soft transition-transform duration-700"
+          style={{ transform: `scale(${scale})` }}
+        />
+        <div className="h-24 w-2 rounded-full bg-[#f4efe6]" />
+      </div>
+    );
+  }
+
   if (objectKey === "incense") {
     // The stick burns down from the top and leaves ash behind it.
     const stickWidth = Math.max(6, 112 * (1 - progress));
