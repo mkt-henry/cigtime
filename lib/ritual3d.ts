@@ -202,15 +202,22 @@ function buildCandle(): Built {
   return {
     root,
     ember: flame,
-    emberRate: (p) => 0.25 * (1 - p * 0.5),
+    emberRate: (p) => 0.25 * (1 - p * 0.5) * (1 - THREE.MathUtils.smoothstep(p, 0.92, 1)),
     update(progress, time, dt) {
-      const height = 1.5 * (1 - progress * 0.8);
-      body.scale.y = height;
+      // Burns down to the saucer like the cigarette burns down to the filter;
+      // the flame shrinks and goes out over the last few percent.
+      const height = 1.5 * (1 - progress);
+      body.visible = height > 0.01;
+      body.scale.y = Math.max(height, 0.001);
       const top = 0.055 + height;
+      pool.visible = body.visible;
       pool.position.y = top - 0.035;
       wick.position.y = top + 0.025;
 
-      const strength = 1 - progress * 0.45;
+      const out = THREE.MathUtils.smoothstep(progress, 0.92, 1);
+      const strength = (1 - progress * 0.45) * (1 - out);
+      flame.visible = strength > 0.01;
+      light.visible = flame.visible;
       const flicker = 1 + Math.sin(time * 13.1) * 0.05 + Math.sin(time * 23.7) * 0.035 + Math.sin(time * 5.3) * 0.04;
       flame.position.set(Math.sin(time * 2.1) * 0.012, top + 0.3 * strength, 0);
       outer.scale.set(0.24 * strength, 0.58 * strength * flicker, 1);
@@ -222,7 +229,9 @@ function buildCandle(): Built {
       wax.emissiveIntensity = 0.8 * strength * flicker;
 
       smoke.origin.set(flame.position.x, flame.position.y + 0.22 * strength, 0);
-      smoke.update(dt, time, 0.6);
+      smoke.origin.y = Math.max(smoke.origin.y, top + 0.1);
+      // A last puff of smoke as the flame dies.
+      smoke.update(dt, time, 0.6 + out * 1.2);
     },
   };
 }
@@ -346,16 +355,21 @@ function buildIncense(): Built {
   return {
     root,
     ember,
-    emberRate: () => 0.5,
+    emberRate: (p) => 0.5 * (1 - THREE.MathUtils.smoothstep(p, 0.95, 1)),
     update(progress, time, dt) {
-      const length = 1.45 * (1 - progress * 0.88);
-      coated.scale.y = length;
-      const ashLength = Math.min(0.13, 0.03 + progress * 0.5);
+      // Burns down to the bare bamboo end; the ember dies right at the end.
+      const length = 1.45 * (1 - progress);
+      coated.visible = length > 0.005;
+      coated.scale.y = Math.max(length, 0.001);
+      const out = THREE.MathUtils.smoothstep(progress, 0.95, 1);
+      ember.visible = out < 0.999;
+      const ashLength = Math.min(0.13, 0.03 + progress * 0.5) * (1 - out);
+      ash.visible = ashLength > 0.005;
       const top = 0.36 + length;
       ash.position.y = top;
       ash.scale.y = ashLength;
       ember.position.y = top;
-      const pulse = 0.85 + Math.sin(time * 3.1) * 0.1 + Math.sin(time * 7.7) * 0.05;
+      const pulse = (0.85 + Math.sin(time * 3.1) * 0.1 + Math.sin(time * 7.7) * 0.05) * (1 - out);
       (ember.material as THREE.MeshStandardMaterial).emissiveIntensity = 3 * pulse;
       glow.material.opacity = 0.45 * pulse;
       light.intensity = 0.8 * pulse;
@@ -368,7 +382,7 @@ function buildIncense(): Built {
       ash.localToWorld(tipWorld.set(0, 1, 0));
       root.worldToLocal(tipWorld);
       smoke.origin.copy(tipWorld);
-      smoke.update(dt, time, 1);
+      smoke.update(dt, time, 1 - out);
     },
   };
 }

@@ -143,7 +143,7 @@ function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress
 
   if (objectKey === "incense") {
     // The stick burns down from the top and leaves ash behind it.
-    const stickWidth = Math.max(6, 112 * (1 - progress));
+    const stickWidth = 112 * (1 - progress);
     const ashWidth = Math.min(46, progress * 60);
     return (
       <div className="relative h-48 w-48">
@@ -193,8 +193,8 @@ function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress
 
   if (objectKey === "candle") {
     // Wax melts down and the flame gets smaller with it.
-    const waxHeight = Math.max(10, 112 * (1 - progress * 0.78));
-    const flameScale = 1 - progress * 0.55;
+    const waxHeight = 112 * (1 - progress);
+    const flameScale = progress > 0.97 ? 0 : 1 - progress * 0.55;
     return (
       <div className="relative h-48 w-48">
         <div
