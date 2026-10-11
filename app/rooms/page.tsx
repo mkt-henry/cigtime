@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { SiteFooter } from "@/components/common/SiteFooter";
 import { SiteNav } from "@/components/common/SiteNav";
 import { ROOMS } from "@/lib/constants";
+import { isDaytime } from "@/lib/daytime";
 import { pickLang, t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
 import { pageMetadata } from "@/lib/site";
@@ -15,6 +16,7 @@ export async function generateMetadata() {
 export default async function RoomsPage() {
   const lang = pickLang((await headers()).get("accept-language"));
   const copy = t(lang);
+  const day = await isDaytime();
 
   return (
     <>
@@ -32,10 +34,10 @@ export default async function RoomsPage() {
                 href={`/room/${room.slug}`}
               >
                 <img
-                  alt={sceneFor(room.slug).alt}
+                  alt={sceneFor(room.slug, day).alt}
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                   decoding="async"
-                  src={sceneFor(room.slug).small}
+                  src={sceneFor(room.slug, day).small}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(22,28,36,0.92)_0%,rgba(22,28,36,0.55)_45%,rgba(22,28,36,0.1)_100%)]" />
                 <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl border border-white/10" />

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { LinkButton } from "@/components/common/Button";
 import { ROOMS } from "@/lib/constants";
+import { isDaytime } from "@/lib/daytime";
 import { pickLang, t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
 import { DragScroll } from "./DragScroll";
@@ -10,11 +11,12 @@ import { HeroBackdrop } from "./HeroBackdrop";
 export async function Hero() {
   const lang = pickLang((await headers()).get("accept-language"));
   const copy = t(lang);
+  const day = await isDaytime();
 
   return (
     <main>
       <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-16 pt-28 sm:pb-20">
-        <HeroBackdrop />
+        <HeroBackdrop day={day} />
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <h1 className="fade-up font-display text-[clamp(4.5rem,15vw,11.5rem)] font-black uppercase leading-[0.86] tracking-[-0.01em] text-mist">
@@ -73,11 +75,11 @@ export async function Hero() {
               <Link className="group block" href={`/room/${room.slug}`}>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
                   <img
-                    alt={sceneFor(room.slug).alt}
+                    alt={sceneFor(room.slug, day).alt}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                     decoding="async"
                     loading="lazy"
-                    src={sceneFor(room.slug).small}
+                    src={sceneFor(room.slug, day).small}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-asphalt/90 via-asphalt/10 to-transparent" />
                   <span className="absolute inset-x-4 bottom-4 font-display text-3xl font-black uppercase leading-none text-mist">

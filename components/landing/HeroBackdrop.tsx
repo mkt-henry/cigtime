@@ -2,24 +2,25 @@
 
 import { useRef } from "react";
 import { depth, useParallax } from "@/hooks/useParallax";
-import { HERO_ALT } from "@/lib/scenes";
+import { heroScene } from "@/lib/scenes";
 
 // The rooftop photo drifts a little against the pointer so the page feels like a place.
-export function HeroBackdrop() {
+export function HeroBackdrop({ day }: { day: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useParallax(rootRef);
+  const scene = heroScene(day);
 
   return (
     <div aria-hidden className="absolute inset-0 overflow-hidden" ref={rootRef}>
       <div className="absolute -inset-6" style={depth(12)}>
         <picture>
-          <source media="(max-width: 700px)" srcSet="/scenes/hero-sm.webp" />
+          <source media="(max-width: 700px)" srcSet={scene.small} />
           <img
-            alt={HERO_ALT}
+            alt={scene.alt}
             className="h-full w-full object-cover object-[30%_center]"
             decoding="async"
             fetchPriority="high"
-            src="/scenes/hero.webp"
+            src={scene.large}
           />
         </picture>
       </div>

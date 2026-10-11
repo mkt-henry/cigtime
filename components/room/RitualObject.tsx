@@ -9,6 +9,7 @@ import { sceneFor } from "@/lib/scenes";
 
 export function RitualObject({
   backgroundImage,
+  day,
   fullscreen,
   isAccelerating,
   object,
@@ -18,6 +19,7 @@ export function RitualObject({
   roomSlug,
 }: {
   backgroundImage?: string | null;
+  day?: boolean;
   fullscreen?: boolean;
   isAccelerating?: boolean;
   object: RitualObjectType;
@@ -36,7 +38,7 @@ export function RitualObject({
           : "relative mx-auto flex h-[360px] w-full items-center justify-center overflow-hidden rounded-2xl bg-asphalt"
       }
     >
-      {backgroundImage ? <CustomRoomBackground imageUrl={backgroundImage} /> : <SceneBackdrop roomSlug={roomSlug} />}
+      {backgroundImage ? <CustomRoomBackground imageUrl={backgroundImage} /> : <SceneBackdrop day={day} roomSlug={roomSlug} />}
       {!fullscreen && (
         <>
           <div
@@ -219,10 +221,10 @@ function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress
 
 // The room's photograph, drifting slightly against the pointer, with a vignette that
 // keeps the centre object and the floating thoughts readable.
-function SceneBackdrop({ roomSlug }: { roomSlug: string }) {
+function SceneBackdrop({ day, roomSlug }: { day?: boolean; roomSlug: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useParallax(rootRef);
-  const scene = sceneFor(roomSlug);
+  const scene = sceneFor(roomSlug, day);
 
   return (
     <div aria-hidden className="absolute inset-0 overflow-hidden" ref={rootRef}>
@@ -232,7 +234,13 @@ function SceneBackdrop({ roomSlug }: { roomSlug: string }) {
           <img alt={scene.alt} className="h-full w-full object-cover" decoding="async" fetchPriority="high" src={scene.large} />
         </picture>
       </div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(22,28,36,0.15)_0%,rgba(22,28,36,0.55)_70%,rgba(22,28,36,0.85)_100%)]" />
+      <div
+        className={
+          day
+            ? "absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(22,28,36,0)_0%,rgba(22,28,36,0.3)_70%,rgba(22,28,36,0.65)_100%)]"
+            : "absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(22,28,36,0.15)_0%,rgba(22,28,36,0.55)_70%,rgba(22,28,36,0.85)_100%)]"
+        }
+      />
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-asphalt/70 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-asphalt/80 to-transparent" />
     </div>
