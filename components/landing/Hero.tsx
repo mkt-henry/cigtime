@@ -4,6 +4,7 @@ import { LinkButton } from "@/components/common/Button";
 import { ROOMS } from "@/lib/constants";
 import { pickLang, t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
+import { DragScroll } from "./DragScroll";
 import { HeroBackdrop } from "./HeroBackdrop";
 
 export async function Hero() {
@@ -66,7 +67,7 @@ export async function Hero() {
         <h2 className="mx-auto max-w-6xl px-5 font-display text-4xl font-black uppercase leading-none text-mist sm:px-8 sm:text-5xl">
           {copy.spotsTitle}
         </h2>
-        <ul className="mx-auto mt-10 flex max-w-6xl snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-4 sm:scroll-px-8 [scrollbar-width:none] sm:px-8">
+        <DragScroll className="mx-auto mt-10 flex max-w-6xl snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-4 sm:scroll-px-8 [scrollbar-width:none] sm:px-8">
           {ROOMS.map((room) => (
             <li className="w-[68vw] shrink-0 snap-start sm:w-64" key={room.slug}>
               <Link className="group block" href={`/room/${room.slug}`}>
@@ -89,7 +90,7 @@ export async function Hero() {
               </Link>
             </li>
           ))}
-        </ul>
+        </DragScroll>
       </section>
     </main>
   );
