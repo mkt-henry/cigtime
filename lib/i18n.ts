@@ -98,6 +98,7 @@ const EN = {
   statsError: "DAU could not be loaded.",
 
   reactionsTitle: "What came back",
+  addReaction: "React",
   reactionsSubtitle: "Reactions to thoughts left by this browser.",
   reactionsLoading: "Loading reactions...",
   reactionsError: "Reactions could not be loaded.",
@@ -198,6 +199,7 @@ const ES: Copy = {
   statsError: "No se pudo cargar el DAU.",
 
   reactionsTitle: "Lo que volvió",
+  addReaction: "Reaccionar",
   reactionsSubtitle: "Reacciones a los pensamientos que dejó este navegador.",
   reactionsLoading: "Cargando reacciones...",
   reactionsError: "No se pudieron cargar las reacciones.",

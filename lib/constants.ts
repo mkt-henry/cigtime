@@ -1,6 +1,6 @@
 import type { ReactionType, RitualObject, Room } from "./types";
 
-export const SESSION_DURATION_SEC = 60;
+export const SESSION_DURATION_SEC = 300;
 // Lengths the person in the room can pick for their own cigtime.
 export const SESSION_DURATION_OPTIONS = [60, 180, 300, 600];
 
@@ -88,6 +88,15 @@ export const RITUAL_OBJECTS: RitualObject[] = [
 ];
 
 export const REACTIONS: ReactionType[] = ["same", "real", "oof", "lol", "hug"];
+
+// Reactions are stored by name; this is how they show up on screen.
+export const REACTION_EMOJI: Record<ReactionType, string> = {
+  same: "🤝",
+  real: "💯",
+  oof: "😮‍💨",
+  lol: "😂",
+  hug: "🫂",
+};
 
 export const REPORT_REASONS = [
   "harassment",

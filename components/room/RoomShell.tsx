@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeft, ImagePlus, RotateCcw, Send, Trash2 } from "lucide-react";
-import { MotionConfig, motion } from "framer-motion";
+import { ArrowLeft, ImagePlus, RotateCcw, Send, SmilePlus, Trash2 } from "lucide-react";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
@@ -9,6 +9,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button, LinkButton } from "@/components/common/Button";
 import {
   REACTIONS,
+  REACTION_EMOJI,
   RITUAL_OBJECTS,
   SESSION_DURATION_OPTIONS,
   SESSION_DURATION_SEC,
@@ -828,6 +829,7 @@ function FloatingMessage({
   const isAmbient = message.message.id.startsWith(AMBIENT_PREFIX);
   const copy = t(lang);
   const seed = seedOf(message.message.id);
+  const [picking, setPicking] = useState(false);
 
   return (
     <div
@@ -883,43 +885,18 @@ function FloatingMessage({
           />
         )}
         {!isAmbient && (
-          <div className="mt-2.5 flex flex-wrap justify-center gap-1">
-            {REACTIONS.map((reactionType) => {
-              const reactions = message.message.reactions.filter(
-                (reaction) => reaction.reaction_type === reactionType,
-              );
-              const active = reactions.some(
-                (reaction) => reaction.anonymous_user_id === anonymousUserId,
-              );
-              return (
-                <motion.button
-                  aria-pressed={active}
-                  whileTap={{ scale: 0.82 }}
-                  whileHover={{ scale: 1.08 }}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium sm:px-2.5 sm:py-1 transition focus-visible:ring-2 focus-visible:ring-sodium ${
-                    active ? "bg-sodium text-asphalt" : "bg-white/10 text-fog hover:bg-white/20 hover:text-mist"
-                  }`}
-                  key={reactionType}
-                  disabled={isMine}
-                  onClick={() => onReact(message.message.id, reactionType)}
-                  type="button"
-                >
-                  {reactionType}
-                  {reactions.length > 0 ? (
-                    <motion.span
-                      animate={{ scale: 1 }}
-                      className="ml-1 inline-block"
-                      initial={{ scale: 1.7 }}
-                      key={reactions.length}
-                      transition={{ type: "spring", stiffness: 400, damping: 12 }}
-                    >
-                      {reactions.length}
-                    </motion.span>
-                  ) : null}
-                </motion.button>
-              );
-            })}
-          </div>
+          <ReactionBar
+            anonymousUserId={anonymousUserId}
+            canReact={!isMine}
+            label={copy.addReaction}
+            onPick={(reactionType) => {
+              onReact(message.message.id, reactionType);
+              setPicking(false);
+            }}
+            onToggle={() => setPicking((open) => !open)}
+            open={picking}
+            reactions={message.message.reactions}
+          />
         )}
         {isDisappearing && (
           <>
@@ -931,6 +908,98 @@ function FloatingMessage({
         )}
       </motion.div>
       </motion.div>
+    </div>
+  );
+}
+
+// Emoji reactions under a thought: counts so far, plus a button that opens the picker.
+function ReactionBar({
+  anonymousUserId,
+  canReact,
+  label,
+  onPick,
+  onToggle,
+  open,
+  reactions,
+}: {
+  anonymousUserId: string;
+  canReact: boolean;
+  label: string;
+  onPick: (reactionType: ReactionType) => void;
+  onToggle: () => void;
+  open: boolean;
+  reactions: SharedMessage["reactions"];
+}) {
+  const counts = REACTIONS.map((reactionType) => ({
+    active: reactions.some((r) => r.reaction_type === reactionType && r.anonymous_user_id === anonymousUserId),
+    count: reactions.filter((r) => r.reaction_type === reactionType).length,
+    reactionType,
+  }));
+  const given = counts.filter((item) => item.count > 0);
+  if (!canReact && given.length === 0) return null;
+
+  return (
+    <div className="mt-2.5">
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        {given.map(({ active, count, reactionType }) => (
+          <motion.span
+            animate={{ scale: 1 }}
+            className={`inline-flex h-7 items-center gap-1 rounded-full px-2 text-sm ${active ? "bg-sodium/25 text-mist" : "bg-white/10 text-fog"}`}
+            initial={{ scale: 1.4 }}
+            key={`${reactionType}-${count}`}
+            transition={{ type: "spring", stiffness: 400, damping: 12 }}
+          >
+            <span aria-hidden>{REACTION_EMOJI[reactionType]}</span>
+            <span className="text-xs tabular-nums">{count}</span>
+          </motion.span>
+        ))}
+        {canReact && (
+          <button
+            aria-expanded={open}
+            aria-label={label}
+            className={`inline-flex h-7 w-9 items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-sodium ${
+              open ? "bg-sodium text-asphalt" : "bg-white/10 text-fog hover:bg-white/20 hover:text-mist"
+            }`}
+            onClick={onToggle}
+            type="button"
+          >
+            <SmilePlus size={15} aria-hidden />
+          </button>
+        )}
+      </div>
+      <AnimatePresence initial={false}>
+        {canReact && open && (
+          <motion.div
+            animate={{ height: "auto", opacity: 1 }}
+            className="overflow-hidden"
+            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="mt-2 flex justify-center gap-1">
+              {counts.map(({ active, reactionType }, index) => (
+                <motion.button
+                  animate={{ opacity: 1, y: 0 }}
+                  aria-label={reactionType}
+                  aria-pressed={active}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-xl transition focus-visible:ring-2 focus-visible:ring-sodium ${
+                    active ? "bg-sodium/30" : "hover:bg-white/15"
+                  }`}
+                  initial={{ opacity: 0, y: 8 }}
+                  key={reactionType}
+                  onClick={() => onPick(reactionType)}
+                  transition={{ delay: index * 0.03 }}
+                  type="button"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.8 }}
+                >
+                  {REACTION_EMOJI[reactionType]}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
