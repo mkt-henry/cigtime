@@ -75,7 +75,6 @@ export function RoomShell({ room }: { room: Room }) {
   const [droppedCount, setDroppedCount] = useState(0);
   const [lastThought, setLastThought] = useState<string | null>(null);
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
-  const [showInput, setShowInput] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [inputBody, setInputBody] = useState("");
@@ -342,34 +341,16 @@ export function RoomShell({ room }: { room: Room }) {
     void completeSession();
   }, [activeSessionId, anonymousUser, timer.isDone]);
 
-  useEffect(() => {
-    if (showInput) {
-      const t = setTimeout(() => chatInputRef.current?.focus(), 50);
-      return () => clearTimeout(t);
-    }
-  }, [showInput]);
-
-  useEffect(() => {
-    if (!showInput) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setShowInput(false);
-        setInputError(null);
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showInput]);
+  // The input stays open; tapping the scene only picks where the next thought lands.
+  // Only mouse users get focus moved to the input, so a tap on a phone doesn't pop the keyboard.
+  function pickTarget(target: MessageTarget) {
+    setMessageTarget(target);
+    if (window.matchMedia("(pointer: fine)").matches) chatInputRef.current?.focus();
+  }
 
   function handleSceneClick(event: MouseEvent<HTMLElement>) {
     if (room.isSilent) return;
-    if (showInput) {
-      setShowInput(false);
-      setInputError(null);
-    } else {
-      setMessageTarget(getMessageTarget(event.clientX, event.clientY));
-      setShowInput(true);
-    }
+    pickTarget(getMessageTarget(event.clientX, event.clientY));
   }
 
   async function send(event: FormEvent) {
@@ -426,7 +407,6 @@ export function RoomShell({ room }: { room: Room }) {
       });
       setInputBody("");
       setMessageTarget(null);
-      setShowInput(false);
     } catch (error) {
       setInputError(error instanceof Error ? error.message : copy.errorSend);
     } finally {
@@ -569,8 +549,7 @@ export function RoomShell({ room }: { room: Room }) {
         if (room.isSilent) return;
         if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
-        setMessageTarget(getDefaultMessageTarget());
-        setShowInput(true);
+        pickTarget(getDefaultMessageTarget());
       }}
       tabIndex={0}
     >
@@ -692,8 +671,17 @@ export function RoomShell({ room }: { room: Room }) {
       </div>
 
       {/* Tap hint */}
-      {!showInput && droppedCount === 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center">
+      {/* Where the next thought will land */}
+      {messageTarget && !room.isSilent && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute z-20 h-3 w-3 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-sodium/80 shadow-[0_0_14px_rgba(242,162,60,0.75)]"
+          style={{ left: messageTarget.x, top: messageTarget.y }}
+        />
+      )}
+
+      {droppedCount === 0 && (
+        <div className={`pointer-events-none absolute inset-x-0 z-10 text-center ${room.isSilent ? "bottom-8" : "bottom-32"}`}>
           <p className="text-sm text-mist/70 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
           </p>
@@ -704,12 +692,19 @@ export function RoomShell({ room }: { room: Room }) {
       )}
 
       {/* Chat input overlay */}
-      {showInput && (
-        <div
-          className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-asphalt/90 via-asphalt/40 to-transparent px-4 pb-6 pt-20"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <form className="mx-auto flex max-w-xl flex-col gap-2" onSubmit={send}>
+      {!room.isSilent && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-asphalt/90 via-asphalt/40 to-transparent px-4 pb-6 pt-20">
+          <form
+            className="pointer-events-auto mx-auto flex max-w-xl flex-col gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                chatInputRef.current?.blur();
+                setInputError(null);
+              }
+            }}
+            onSubmit={send}
+          >
             <div className="flex h-14 items-center gap-2 rounded-full border border-white/15 bg-asphalt/60 pl-5 pr-1.5 backdrop-blur-md transition focus-within:border-sodium/70">
               <input
                 autoComplete="off"
@@ -1030,11 +1025,10 @@ function getHorizontalMargin() {
 
 function getMessageTarget(x: number, y: number): MessageTarget {
   const horizontalMargin = getHorizontalMargin();
-  const verticalMargin = 72;
 
   return {
     x: clamp(x, horizontalMargin, window.innerWidth - horizontalMargin),
-    y: clearOfObject(clamp(y, verticalMargin, window.innerHeight - verticalMargin)),
+    y: clearOfObject(clamp(y, 72, window.innerHeight - INPUT_CLEARANCE)),
   };
 }
 
@@ -1065,13 +1059,16 @@ function isNarrow() {
 // On phones every bubble spans the middle of the screen, so they go above the
 // cigarette tip or below the filter instead of covering it (and its hold target).
 // The cigarette is drawn from about 90px above centre to 135px below it.
+// The message input is always open at the bottom; thoughts land above it.
+const INPUT_CLEARANCE = 160;
+
 function clearOfObject(y: number) {
   if (!isNarrow()) return y;
   const height = window.innerHeight;
   const hudBottom = 184;
   const above = Math.max(hudBottom, height / 2 - 155);
-  const below = Math.min(height - 130, height / 2 + 200);
-  const clamped = clamp(y, hudBottom, height - 80);
+  const below = Math.min(height - INPUT_CLEARANCE, height / 2 + 200);
+  const clamped = clamp(y, hudBottom, height - INPUT_CLEARANCE);
   if (clamped <= above || clamped >= below) return clamped;
   return clamped - above < below - clamped ? above : below;
 }

@@ -33,7 +33,7 @@ const EN = {
   roomsSilentTag: "no posting",
 
   opening: "Opening room...",
-  tapHint: "tap to share a thought",
+  tapHint: "tap where your thought should land",
   holdFilterHint: "hold the filter to burn it faster",
   holdObjectHint: "hold it to burn faster",
   statusConnecting: "connecting",
@@ -136,7 +136,7 @@ const ES: Copy = {
   roomsSilentTag: "sin mensajes",
 
   opening: "Abriendo la sala...",
-  tapHint: "toca para soltar un pensamiento",
+  tapHint: "toca donde quieres que caiga tu pensamiento",
   holdFilterHint: "mantén pulsado el filtro para que arda más rápido",
   holdObjectHint: "mantenlo pulsado para que se consuma más rápido",
   statusConnecting: "conectando",
