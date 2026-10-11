@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
 import { useLang } from "@/hooks/useLang";
+import { REACTION_EMOJI } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import type { ReactionType } from "@/lib/types";
 
@@ -76,7 +77,7 @@ export function ReactionInbox() {
             <div className="mt-4 flex flex-wrap gap-2">
               {[...counts].map(([reaction, count]) => (
                 <span className="rounded-full bg-sodium/15 px-3 py-1 text-xs font-semibold text-sodium" key={reaction}>
-                  {reaction} {count}
+                  {REACTION_EMOJI[reaction]} {count}
                 </span>
               ))}
             </div>
