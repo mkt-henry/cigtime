@@ -114,8 +114,8 @@ function ObjectVisual({
 // CSS stand-ins, shown while the 3D scene loads and on devices without WebGL.
 function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress: number }) {
   if (objectKey === "candy") {
-    // A swirl lollipop that shrinks towards its stick.
-    const scale = 1 - progress * 0.58;
+    // A swirl lollipop that is licked down to its stick.
+    const scale = 1 - progress;
     return (
       <div className="float-slow relative flex h-56 w-40 flex-col items-center">
         <div
@@ -128,8 +128,8 @@ function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress
   }
 
   if (objectKey === "ballpop") {
-    // A round ball candy on a stick that shrinks towards the stick.
-    const scale = 1 - progress * 0.5;
+    // A round ball candy on a stick that is licked down to the stick.
+    const scale = 1 - progress;
     return (
       <div className="float-slow relative flex h-56 w-40 flex-col items-center">
         <div
