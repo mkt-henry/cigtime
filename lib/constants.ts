@@ -57,8 +57,8 @@ export const RITUAL_OBJECTS: RitualObject[] = [
   },
   {
     key: "candy",
-    name: "Candy",
-    action: "The wrapper opens and the color fades.",
+    name: "Lollipop",
+    action: "The swirl gets smaller with every lick.",
     tone: "lighter and playful",
   },
   {

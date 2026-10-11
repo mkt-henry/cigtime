@@ -114,16 +114,15 @@ function ObjectVisual({
 // CSS stand-ins, shown while the 3D scene loads and on devices without WebGL.
 function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress: number }) {
   if (objectKey === "candy") {
-    // The candy itself shrinks while the wrapper stays put.
-    const scale = 1 - progress * 0.72;
+    // A swirl lollipop that shrinks towards its stick.
+    const scale = 1 - progress * 0.58;
     return (
-      <div className="float-slow relative h-32 w-56">
+      <div className="float-slow relative flex h-56 w-40 flex-col items-center">
         <div
-          className="absolute left-9 top-10 h-14 w-36 origin-center rounded-full bg-ember shadow-soft transition-transform duration-700"
+          className="h-32 w-32 origin-bottom rounded-full shadow-soft transition-transform duration-700 [background:repeating-conic-gradient(#d9302f_0_25%,#fff3e6_0_50%,#f59a2c_0_75%,#ff7aa8_0_100%)]"
           style={{ transform: `scale(${scale})` }}
         />
-        <div className="absolute left-0 top-12 h-10 w-14 rotate-[-18deg] rounded-md bg-white" />
-        <div className="absolute right-0 top-12 h-10 w-14 rotate-[18deg] rounded-md bg-white" />
+        <div className="h-24 w-2 rounded-full bg-[#f4efe6]" />
       </div>
     );
   }
