@@ -105,7 +105,10 @@ function ObjectVisual({
   return (
     <RitualScene3D
       fallback={<FlatObjectVisual objectKey={objectKey} progress={progress} />}
+      isAccelerating={isAccelerating}
       objectKey={objectKey}
+      onHoldEnd={onFilterHoldEnd}
+      onHoldStart={onFilterHoldStart}
       progress={progress}
     />
   );
