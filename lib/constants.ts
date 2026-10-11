@@ -62,6 +62,12 @@ export const RITUAL_OBJECTS: RitualObject[] = [
     tone: "lighter and playful",
   },
   {
+    key: "ballpop",
+    name: "Ball Pop",
+    action: "The wrapper comes off and the ball melts down.",
+    tone: "sweet and silly",
+  },
+  {
     key: "incense",
     name: "Incense",
     action: "Smoke lifts in a thin line.",

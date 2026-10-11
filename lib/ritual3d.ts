@@ -56,7 +56,7 @@ export function mountRitual(canvas: HTMLCanvasElement, objectKey: string, option
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   camera.position.set(0, view.y, view.z);
   const stage = new THREE.Group();
-  stage.add(contactShadow(objectKey === "candy" ? 1.2 : 2.3));
+  stage.add(contactShadow(objectKey === "candy" || objectKey === "ballpop" ? 1.2 : 2.3));
   stage.add(built.root);
   scene.add(stage);
 
@@ -140,6 +140,7 @@ export function mountRitual(canvas: HTMLCanvasElement, objectKey: string, option
 
 function buildObject(objectKey: string): Built {
   if (objectKey === "candy") return buildCandy();
+  if (objectKey === "ballpop") return buildBallPop();
   if (objectKey === "incense") return buildIncense();
   if (objectKey === "coffee") return buildCoffee();
   return buildCandle();
@@ -429,6 +430,115 @@ function buildCandy(): Built {
       sparkle.scale.setScalar(0.16 + Math.sin(time * 1.3) * 0.04);
     },
   };
+}
+
+// ---------------------------------------------------------------- ball pop
+
+// A round ball candy on a stick in a printed twist wrapper. The wrapper comes
+// off first, then the ball gets smaller and paler.
+function buildBallPop(): Built {
+  const root = new THREE.Group();
+  const holder = new THREE.Group();
+  holder.position.y = 0.95;
+  holder.rotation.z = 0.12;
+  root.add(holder);
+
+  const fresh = new THREE.Color(0xff3d6e);
+  const faded = new THREE.Color(0xf6c9d4);
+  const ballMaterial = new THREE.MeshPhysicalMaterial({
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+    color: fresh.clone(),
+    emissive: 0x4a0516,
+    emissiveIntensity: 0.4,
+    roughness: 0.1,
+  });
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.36, 64, 32), ballMaterial);
+  holder.add(ball);
+
+  const stick = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.032, 0.032, 0.95, 16).translate(0, -0.47, 0),
+    new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: 0.75 }),
+  );
+  holder.add(stick);
+
+  // Printed wrapper: a crinkled shell over the ball and a twisted neck at the stick.
+  const wrapperMaterial = new THREE.MeshPhysicalMaterial({
+    clearcoat: 0.8,
+    map: wrapperTexture(),
+    roughness: 0.35,
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
+  const wrapper = new THREE.Group();
+  const shell = new THREE.Mesh(
+    crinkle(new THREE.SphereGeometry(0.385, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.82), 0.012),
+    wrapperMaterial,
+  );
+  const neck = new THREE.Mesh(
+    crinkle(lathe([[0.2, 0], [0.07, -0.08], [0.05, -0.14], [0.12, -0.24], [0.15, -0.28]], 40), 0.015),
+    wrapperMaterial,
+  );
+  neck.position.y = -0.31;
+  wrapper.add(shell, neck);
+  holder.add(wrapper);
+
+  const sparkle = new THREE.Sprite(
+    new THREE.SpriteMaterial({ blending: THREE.AdditiveBlending, depthWrite: false, map: softDotTexture(), opacity: 0, transparent: true }),
+  );
+  holder.add(sparkle);
+
+  return {
+    root,
+    update(progress, time) {
+      holder.position.y = 0.95 + Math.sin(time * 0.9) * 0.05;
+      holder.rotation.y = time * 0.25;
+
+      // 0 to 0.3: the wrapper loosens, lifts off and fades.
+      const off = THREE.MathUtils.smoothstep(progress, 0.02, 0.3);
+      wrapper.visible = off < 0.999;
+      wrapper.position.y = off * 0.5;
+      wrapper.scale.setScalar(1 + off * 0.35);
+      wrapper.rotation.y = off * 1.8;
+      wrapperMaterial.opacity = 1 - off;
+
+      // 0.3 to 1: the ball is licked down towards the stick.
+      const licked = THREE.MathUtils.clamp((progress - 0.3) / 0.7, 0, 1);
+      const size = 1 - licked * 0.5;
+      ball.scale.setScalar(size);
+      ball.position.y = -(1 - size) * 0.36;
+      ballMaterial.color.lerpColors(fresh, faded, licked * 0.8);
+
+      sparkle.position.set(-0.13 * size, 0.15 * size + ball.position.y, 0.32 * size);
+      sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * off * (1 - licked * 0.6);
+      sparkle.scale.setScalar(0.14 + Math.sin(time * 1.3) * 0.04);
+    },
+  };
+}
+
+// Bright stripes with a simple daisy, in the spirit of classic ball-pop wrappers.
+function wrapperTexture() {
+  return canvasTexture(512, (ctx, s) => {
+    const stripes = ["#ffd23f", "#ff4f7b", "#ffffff", "#3fb6ff"];
+    stripes.forEach((color, index) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, (index * s) / stripes.length, s, s / stripes.length);
+    });
+    for (const cx of [s * 0.25, s * 0.75]) {
+      const cy = s * 0.42;
+      ctx.fillStyle = "#ffffff";
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.ellipse(cx + Math.cos(a) * 34, cy + Math.sin(a) * 34, 26, 14, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffb000";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
 }
 
 // Classic lollipop spiral in red, cream, orange and pink.
