@@ -138,9 +138,12 @@ export function mountRitual(canvas: HTMLCanvasElement, objectKey: string, option
   };
 }
 
+// Candies stand on a long stick, so the camera aims higher and sits a bit further back.
+const CANDY_VIEW = { look: 1.2, y: 2.5, z: 6.2 };
+
 function buildObject(objectKey: string): Built {
-  if (objectKey === "candy") return buildCandy();
-  if (objectKey === "ballpop") return buildBallPop();
+  if (objectKey === "candy") return { ...buildCandy(), view: CANDY_VIEW };
+  if (objectKey === "ballpop") return { ...buildBallPop(), view: CANDY_VIEW };
   if (objectKey === "incense") return buildIncense();
   if (objectKey === "coffee") return buildCoffee();
   return buildCandle();
@@ -375,7 +378,7 @@ function buildIncense(): Built {
 function buildCandy(): Built {
   const root = new THREE.Group();
   const holder = new THREE.Group();
-  holder.position.y = 0.98;
+  holder.position.y = 1.78;
   holder.rotation.z = -0.14;
   root.add(holder);
 
@@ -398,7 +401,7 @@ function buildCandy(): Built {
   holder.add(disc);
 
   const stick = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.034, 0.034, 0.95, 16).translate(0, -0.47, 0),
+    new THREE.CylinderGeometry(0.034, 0.034, 1.7, 16).translate(0, -0.85, 0),
     new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: 0.75 }),
   );
   holder.add(stick);
@@ -415,18 +418,19 @@ function buildCandy(): Built {
   return {
     root,
     update(progress, time) {
-      holder.position.y = 0.98 + Math.sin(time * 0.9) * 0.05;
+      holder.position.y = 1.78 + Math.sin(time * 0.9) * 0.05;
       holder.rotation.y = Math.sin(time * 0.35) * 0.6;
 
-      // Licked down: the disc shrinks towards the stick and its colours soften.
-      const size = 1 - progress * 0.58;
-      disc.scale.set(size, size, 1 - progress * 0.35);
-      disc.position.y = -(1 - size) * 0.4;
+      // Licked down to nothing: the disc shrinks onto the stick tip and its
+      // colours soften, so only the bare stick is left at the end.
+      const size = 1 - progress;
+      disc.visible = size > 0.01;
+      disc.scale.set(size, size, 0.35 + size * 0.65);
       candyMaterial.color.lerpColors(fresh, faded, progress * 0.8);
       edgeMaterial.color.setHex(0xd9302f).lerp(faded, progress * 0.6);
 
-      sparkle.position.set(-0.22 * size, 0.26 * size + disc.position.y, 0.2);
-      sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * (1 - progress * 0.6);
+      sparkle.position.set(-0.22 * size, 0.26 * size, 0.2 * size);
+      sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * size;
       sparkle.scale.setScalar(0.16 + Math.sin(time * 1.3) * 0.04);
     },
   };
@@ -435,11 +439,11 @@ function buildCandy(): Built {
 // ---------------------------------------------------------------- ball pop
 
 // A round ball candy on a stick in a printed twist wrapper. The wrapper comes
-// off first, then the ball gets smaller and paler.
+// off first, then the ball is licked down until only the stick is left.
 function buildBallPop(): Built {
   const root = new THREE.Group();
   const holder = new THREE.Group();
-  holder.position.y = 0.95;
+  holder.position.y = 1.78;
   holder.rotation.z = 0.12;
   root.add(holder);
 
@@ -457,7 +461,7 @@ function buildBallPop(): Built {
   holder.add(ball);
 
   const stick = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.032, 0.032, 0.95, 16).translate(0, -0.47, 0),
+    new THREE.CylinderGeometry(0.032, 0.032, 1.7, 16).translate(0, -0.85, 0),
     new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: 0.75 }),
   );
   holder.add(stick);
@@ -491,7 +495,7 @@ function buildBallPop(): Built {
   return {
     root,
     update(progress, time) {
-      holder.position.y = 0.95 + Math.sin(time * 0.9) * 0.05;
+      holder.position.y = 1.78 + Math.sin(time * 0.9) * 0.05;
       holder.rotation.y = time * 0.25;
 
       // 0 to 0.3: the wrapper loosens, lifts off and fades.
@@ -502,15 +506,15 @@ function buildBallPop(): Built {
       wrapper.rotation.y = off * 1.8;
       wrapperMaterial.opacity = 1 - off;
 
-      // 0.3 to 1: the ball is licked down towards the stick.
+      // 0.3 to 1: the ball is licked down onto the stick tip until it's gone.
       const licked = THREE.MathUtils.clamp((progress - 0.3) / 0.7, 0, 1);
-      const size = 1 - licked * 0.5;
+      const size = 1 - licked;
+      ball.visible = size > 0.01;
       ball.scale.setScalar(size);
-      ball.position.y = -(1 - size) * 0.36;
       ballMaterial.color.lerpColors(fresh, faded, licked * 0.8);
 
-      sparkle.position.set(-0.13 * size, 0.15 * size + ball.position.y, 0.32 * size);
-      sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * off * (1 - licked * 0.6);
+      sparkle.position.set(-0.13 * size, 0.15 * size, 0.32 * size);
+      sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * off * size;
       sparkle.scale.setScalar(0.14 + Math.sin(time * 1.3) * 0.04);
     },
   };
