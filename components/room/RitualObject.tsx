@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import type { RitualObject as RitualObjectType } from "@/lib/types";
 import { SmokerPerspectiveCigarette } from "@/components/common/SmokerPerspectiveCigarette";
+import { RitualScene3D } from "@/components/room/RitualScene3D";
 import { depth, useParallax } from "@/hooks/useParallax";
 import { sceneFor } from "@/lib/scenes";
 
@@ -90,6 +91,28 @@ function ObjectVisual({
   onFilterHoldStart?: () => void;
   progress: number;
 }) {
+  if (objectKey === "cigarette") {
+    return (
+      <SmokerPerspectiveCigarette
+        isAccelerating={isAccelerating}
+        onFilterHoldEnd={onFilterHoldEnd}
+        onFilterHoldStart={onFilterHoldStart}
+        progress={progress}
+      />
+    );
+  }
+
+  return (
+    <RitualScene3D
+      fallback={<FlatObjectVisual objectKey={objectKey} progress={progress} />}
+      objectKey={objectKey}
+      progress={progress}
+    />
+  );
+}
+
+// CSS stand-ins, shown while the 3D scene loads and on devices without WebGL.
+function FlatObjectVisual({ objectKey, progress }: { objectKey: string; progress: number }) {
   if (objectKey === "candy") {
     // The candy itself shrinks while the wrapper stays put.
     const scale = 1 - progress * 0.72;
@@ -175,14 +198,7 @@ function ObjectVisual({
     );
   }
 
-  return (
-    <SmokerPerspectiveCigarette
-      isAccelerating={isAccelerating}
-      onFilterHoldEnd={onFilterHoldEnd}
-      onFilterHoldStart={onFilterHoldStart}
-      progress={progress}
-    />
-  );
+  return null;
 }
 
 // The room's photograph, drifting slightly against the pointer, with a vignette that
