@@ -64,7 +64,7 @@ type MessageTarget = {
   y: number;
 };
 
-export function RoomShell({ room }: { room: Room }) {
+export function RoomShell({ day, room }: { day: boolean; room: Room }) {
   const anonymousUser = useAnonymousUser();
   const [durationSec, setDurationSec] = useState(SESSION_DURATION_SEC);
   const timer = useSessionTimer(durationSec);
@@ -557,6 +557,7 @@ export function RoomShell({ room }: { room: Room }) {
       <div className="absolute inset-0">
         <RitualObject
           backgroundImage={roomBackground}
+          day={day}
           fullscreen
           isAccelerating={timer.isAccelerating}
           object={selectedObject}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { RoomShell } from "@/components/room/RoomShell";
 import { headers } from "next/headers";
 import { ROOMS } from "@/lib/constants";
+import { isDaytime } from "@/lib/daytime";
 import { pickLang, t } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/site";
 
@@ -33,5 +34,5 @@ export default async function RoomPage({
     notFound();
   }
 
-  return <RoomShell room={room} />;
+  return <RoomShell day={await isDaytime()} room={room} />;
 }
