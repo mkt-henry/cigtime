@@ -56,7 +56,7 @@ export function mountRitual(canvas: HTMLCanvasElement, objectKey: string, option
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   camera.position.set(0, view.y, view.z);
   const stage = new THREE.Group();
-  stage.add(contactShadow(objectKey === "candy" ? 1.5 : 2.3));
+  stage.add(contactShadow(objectKey === "candy" ? 1.2 : 2.3));
   stage.add(built.root);
   scene.add(stage);
 
@@ -369,90 +369,91 @@ function buildIncense(): Built {
   };
 }
 
-// ---------------------------------------------------------------- candy
+// ---------------------------------------------------------------- candy (lollipop)
 
 function buildCandy(): Built {
   const root = new THREE.Group();
   const holder = new THREE.Group();
-  holder.position.y = 0.62;
+  holder.position.y = 0.98;
+  holder.rotation.z = -0.14;
   root.add(holder);
 
-  const fresh = new THREE.Color(0xb3120f);
-  const faded = new THREE.Color(0xf2c9b4);
+  // Swirled disc: flat faces carry the spiral, a torus rounds off the edge.
+  const swirl = swirlTexture();
   const candyMaterial = new THREE.MeshPhysicalMaterial({
     clearcoat: 1,
-    clearcoatRoughness: 0.03,
-    color: fresh.clone(),
-    emissive: 0x3a0602,
-    emissiveIntensity: 0.4,
-    roughness: 0.06,
+    clearcoatRoughness: 0.04,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.18,
+    emissiveMap: swirl,
+    map: swirl,
+    roughness: 0.14,
   });
-  const candy = new THREE.Mesh(new THREE.SphereGeometry(0.4, 64, 32), candyMaterial);
-  holder.add(candy);
+  const edgeMaterial = new THREE.MeshPhysicalMaterial({ clearcoat: 1, clearcoatRoughness: 0.04, color: 0xd9302f, roughness: 0.14 });
+  const disc = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.56, 0.2, 96).rotateX(Math.PI / 2), [edgeMaterial, candyMaterial, candyMaterial]);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.1, 20, 96), edgeMaterial);
+  disc.add(face, rim);
+  holder.add(disc);
 
-  // Cellophane: a loose shell around the candy and two twisted ends.
-  const cellophane = new THREE.MeshPhysicalMaterial({
-    clearcoat: 1,
-    color: 0xffffff,
-    depthWrite: false,
-    iridescence: 1,
-    iridescenceIOR: 1.35,
-    opacity: 0.32,
-    roughness: 0.12,
-    side: THREE.DoubleSide,
-    transparent: true,
-  });
-  const shellMaterial = cellophane.clone();
-  const shell = new THREE.Mesh(crinkle(new THREE.SphereGeometry(0.47, 48, 24), 0.018), shellMaterial);
-  shell.scale.set(1.38, 1, 1);
-  holder.add(shell);
-
-  const ends = [-1, 1].map((side) => {
-    const end = new THREE.Group();
-    const twist = new THREE.Mesh(
-      crinkle(lathe([[0.34, 0], [0.16, 0.1], [0.07, 0.2], [0.12, 0.28], [0.26, 0.42], [0.36, 0.5], [0.38, 0.53]], 40), 0.02),
-      cellophane,
-    );
-    twist.rotation.z = side * -Math.PI / 2;
-    end.add(twist);
-    end.position.x = side * 0.5;
-    holder.add(end);
-    return { end, side };
-  });
+  const stick = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.034, 0.034, 0.95, 16).translate(0, -0.47, 0),
+    new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: 0.75 }),
+  );
+  holder.add(stick);
 
   const sparkle = new THREE.Sprite(
     new THREE.SpriteMaterial({ blending: THREE.AdditiveBlending, depthWrite: false, map: softDotTexture(), opacity: 0, transparent: true }),
   );
-  sparkle.position.set(-0.18, 0.2, 0.42);
+  sparkle.position.set(-0.22, 0.26, 0.2);
   holder.add(sparkle);
+
+  const fresh = new THREE.Color(0xffffff);
+  const faded = new THREE.Color(0xe9dcd4);
 
   return {
     root,
     update(progress, time) {
-      holder.position.y = 0.62 + Math.sin(time * 0.9) * 0.05;
-      holder.rotation.y = Math.sin(time * 0.35) * 0.45;
-      holder.rotation.z = Math.sin(time * 0.5) * 0.06;
+      holder.position.y = 0.98 + Math.sin(time * 0.9) * 0.05;
+      holder.rotation.y = Math.sin(time * 0.35) * 0.6;
 
-      const size = 1 - progress * 0.62;
-      candy.scale.set(1.34 * size, size, size);
-      candyMaterial.color.lerpColors(fresh, faded, progress * 0.85);
+      // Licked down: the disc shrinks towards the stick and its colours soften.
+      const size = 1 - progress * 0.58;
+      disc.scale.set(size, size, 1 - progress * 0.35);
+      disc.position.y = -(1 - size) * 0.4;
+      candyMaterial.color.lerpColors(fresh, faded, progress * 0.8);
+      edgeMaterial.color.setHex(0xd9302f).lerp(faded, progress * 0.6);
 
-      // The wrapper opens: the shell fades, the ends untwist and drift away.
-      const open = THREE.MathUtils.smoothstep(progress, 0, 0.55);
-      cellophane.opacity = 0.32 * (1 - progress * 0.55);
-      shellMaterial.opacity = cellophane.opacity * (1 - open);
-      shell.visible = open < 0.98;
-      shell.scale.set(1.38 + open * 0.12, 1 + open * 0.1, 1 + open * 0.1);
-      ends.forEach(({ end, side }) => {
-        end.position.x = side * (0.5 + open * 0.38);
-        end.rotation.x = side * open * 2.4;
-        end.scale.set(1, 1 + open * 0.5, 1 + open * 0.5);
-      });
-
+      sparkle.position.set(-0.22 * size, 0.26 * size + disc.position.y, 0.2);
       sparkle.material.opacity = Math.max(0, Math.sin(time * 1.3)) ** 8 * 0.6 * (1 - progress * 0.6);
       sparkle.scale.setScalar(0.16 + Math.sin(time * 1.3) * 0.04);
     },
   };
+}
+
+// Classic lollipop spiral in red, cream, orange and pink.
+function swirlTexture() {
+  return canvasTexture(512, (ctx, s) => {
+    const colors = [[217, 48, 47], [255, 243, 230], [245, 154, 44], [255, 122, 168]];
+    const image = ctx.createImageData(s, s);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        const dx = (x - s / 2) / (s / 2);
+        const dy = (y - s / 2) / (s / 2);
+        const r = Math.hypot(dx, dy);
+        const turn = Math.atan2(dy, dx) / (Math.PI * 2);
+        const band = Math.floor(((turn + r * 3.2) * 4 % 4 + 4) % 4);
+        const [cr, cg, cb] = colors[band];
+        const shade = 1 - r * 0.18;
+        const i = (y * s + x) * 4;
+        image.data[i] = cr * shade;
+        image.data[i + 1] = cg * shade;
+        image.data[i + 2] = cb * shade;
+        image.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+  });
 }
 
 // ---------------------------------------------------------------- shared bits
