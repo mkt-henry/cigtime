@@ -34,6 +34,8 @@ const EN = {
 
   opening: "Opening room...",
   tapHint: "tap to share a thought",
+  holdFilterHint: "hold the filter to burn it faster",
+  holdObjectHint: "hold it to burn faster",
   statusConnecting: "connecting",
   statusUnavailable: "unavailable",
   online: (count: number) => `${count} online`,
@@ -135,6 +137,8 @@ const ES: Copy = {
 
   opening: "Abriendo la sala...",
   tapHint: "toca para soltar un pensamiento",
+  holdFilterHint: "mantén pulsado el filtro para que arda más rápido",
+  holdObjectHint: "mantenlo pulsado para que se consuma más rápido",
   statusConnecting: "conectando",
   statusUnavailable: "no disponible",
   online: (count: number) => `${count} en línea`,

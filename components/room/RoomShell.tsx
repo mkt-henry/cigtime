@@ -581,8 +581,8 @@ export function RoomShell({ room }: { room: Room }) {
           fullscreen
           isAccelerating={timer.isAccelerating}
           object={selectedObject}
-          onFilterHoldEnd={selectedObject.key === "cigarette" ? timer.stopAccelerating : undefined}
-          onFilterHoldStart={selectedObject.key === "cigarette" ? timer.startAccelerating : undefined}
+          onFilterHoldEnd={timer.stopAccelerating}
+          onFilterHoldStart={timer.startAccelerating}
           progress={timer.progress}
           roomSlug={room.slug}
         />
@@ -696,6 +696,9 @@ export function RoomShell({ room }: { room: Room }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center">
           <p className="text-sm text-mist/70 drop-shadow">
             {room.isSilent ? copy.silentPlaceholder : copy.tapHint}
+          </p>
+          <p className="mt-1 text-xs text-mist/50 drop-shadow">
+            {selectedObject.key === "cigarette" ? copy.holdFilterHint : copy.holdObjectHint}
           </p>
         </div>
       )}
