@@ -1,10 +1,12 @@
-import { headers } from "next/headers";
+"use client";
+
+import { useLang } from "@/hooks/useLang";
 import { LinkButton } from "@/components/common/Button";
 import { SiteNav } from "@/components/common/SiteNav";
-import { pickLang, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
-export default async function NotFound() {
-  const copy = t(pickLang((await headers()).get("accept-language")));
+export default function NotFound() {
+  const copy = t(useLang());
 
   return (
     <>

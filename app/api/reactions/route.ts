@@ -5,6 +5,7 @@ import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { isAnonymousUserId, isUuid } from "@/lib/requestValidation";
 
 export async function GET(request: Request) {
+  // This inbox is browser-specific and must never enter a shared cache.
   const anonymousUserId = new URL(request.url).searchParams.get("anonymousUserId");
   if (!isAnonymousUserId(anonymousUserId)) {
     return NextResponse.json({ error: "Invalid anonymous user." }, { status: 400 });
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     }))
     .filter((message) => message.reactions.length > 0);
 
-  return NextResponse.json({ messages });
+  return NextResponse.json({ messages }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(request: Request) {

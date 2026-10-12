@@ -1,18 +1,18 @@
 import { ImageResponse } from "next/og";
-import { headers } from "next/headers";
-import { pickLang, t } from "@/lib/i18n";
-import { SITE_URL } from "@/lib/site";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { t } from "@/lib/i18n";
+
+export const dynamic = "error";
 
 export const alt = "cigtime";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OpengraphImage() {
-  const copy = t(pickLang((await headers()).get("accept-language")));
-  // The rooftop photo behind the title; fall back to a flat night if it cannot be fetched.
-  const photo = await fetch(`${SITE_URL}/scenes/og.jpg`)
-    .then(async (response) => (response.ok ? `data:image/jpeg;base64,${Buffer.from(await response.arrayBuffer()).toString("base64")}` : null))
-    .catch(() => null);
+  const copy = t("en");
+  // Build from the checked-in photo; never fetch the deployed site during rendering.
+  const photo = `data:image/jpeg;base64,${(await readFile(path.join(process.cwd(), "public/scenes/og.jpg"))).toString("base64")}`;
 
   return new ImageResponse(
     (

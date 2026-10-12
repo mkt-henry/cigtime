@@ -18,7 +18,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to load DAU." }, { status: 500 });
   }
 
-  return NextResponse.json({ days, dailyActiveUsers: data ?? [] });
+  return NextResponse.json(
+    { days, dailyActiveUsers: data ?? [] },
+    { headers: { "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120" } },
+  );
 }
 
 export async function POST(request: Request) {

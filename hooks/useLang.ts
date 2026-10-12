@@ -8,7 +8,9 @@ export function useLang(): Lang {
   const [lang, setLang] = useState<Lang>("en");
 
   useEffect(() => {
-    setLang(pickLang(navigator.language));
+    const browserLang = pickLang(navigator.language);
+    setLang(browserLang);
+    document.documentElement.lang = browserLang;
   }, []);
 
   return lang;

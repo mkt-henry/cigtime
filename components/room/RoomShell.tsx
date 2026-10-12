@@ -32,6 +32,7 @@ import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ReactionType, Room, SharedMessage } from "@/lib/types";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
+import { useDaytime } from "@/hooks/useDaytime";
 import { useLang } from "@/hooks/useLang";
 import { useMutedUsers } from "@/hooks/useMutedUsers";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
@@ -64,11 +65,12 @@ type MessageTarget = {
   y: number;
 };
 
-export function RoomShell({ day, room }: { day: boolean; room: Room }) {
+export function RoomShell({ room }: { room: Room }) {
   const anonymousUser = useAnonymousUser();
   const [durationSec, setDurationSec] = useState(SESSION_DURATION_SEC);
   const timer = useSessionTimer(durationSec);
   const lang = useLang();
+  const day = useDaytime();
   const copy = t(lang);
   const { mutedUsers, mute } = useMutedUsers();
   const [objectKey, setObjectKey] = useState(RITUAL_OBJECTS[0].key);
