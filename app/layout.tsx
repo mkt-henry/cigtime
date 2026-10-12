@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { Big_Shoulders, Instrument_Sans } from "next/font/google";
-import { pickLang, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION, SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -28,8 +27,8 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const copy = t(pickLang((await headers()).get("accept-language")));
+export function generateMetadata(): Metadata {
+  const copy = t("en");
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -43,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: "cigtime",
       type: "website",
       url: "/",
-      locale: copy === t("es") ? "es_ES" : "en_US",
+      locale: "en_US",
     },
     twitter: {
       card: "summary_large_image",
@@ -57,15 +56,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const lang = pickLang((await headers()).get("accept-language"));
-
   return (
-    <html className={`${display.variable} ${body.variable}`} lang={lang}>
+    <html className={`${display.variable} ${body.variable}`} lang="en">
       <body>
         <AnalyticsTracker />
         {children}

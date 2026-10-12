@@ -7,6 +7,7 @@ import { isAnonymousUserId, isShortString, isUuid } from "@/lib/requestValidatio
 const MESSAGE_RETENTION_HOURS = Math.max(1, Number(process.env.MESSAGE_RETENTION_HOURS ?? 24) || 24);
 
 export async function GET(request: Request) {
+  // Live snapshots must reflect reports/hides and broadcast refreshes immediately.
   const roomSlug = new URL(request.url).searchParams.get("roomSlug");
   if (!roomSlug) {
     return NextResponse.json({ error: "A room is required." }, { status: 400 });
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     reactions: message.reactions ?? [],
   }));
 
-  return NextResponse.json({ messages, roomId: room.id });
+  return NextResponse.json({ messages, roomId: room.id }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(request: Request) {

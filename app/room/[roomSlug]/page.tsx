@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
 import { RoomShell } from "@/components/room/RoomShell";
-import { headers } from "next/headers";
 import { ROOMS } from "@/lib/constants";
-import { isDaytime } from "@/lib/daytime";
-import { pickLang, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/site";
+
+// Fail the build if request-only rendering is introduced into this static page.
+export const dynamic = "error";
+
+// The room catalog is fixed; unknown slugs should never render on demand.
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return ROOMS.map((room) => ({ roomSlug: room.slug }));
@@ -14,10 +18,9 @@ export async function generateMetadata({ params }: { params: Promise<{ roomSlug:
   const { roomSlug } = await params;
   const room = ROOMS.find((item) => item.slug === roomSlug);
   if (!room) return {};
-  const lang = pickLang((await headers()).get("accept-language"));
   return pageMetadata({
     title: room.name,
-    description: t(lang).metaRoom(room.name, lang === "es" ? room.descriptionEs : room.description),
+    description: t("en").metaRoom(room.name, room.description),
     path: `/room/${room.slug}`,
   });
 }
@@ -34,5 +37,5 @@ export default async function RoomPage({
     notFound();
   }
 
-  return <RoomShell day={await isDaytime()} room={room} />;
+  return <RoomShell room={room} />;
 }

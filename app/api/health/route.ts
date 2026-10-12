@@ -18,7 +18,10 @@ export async function GET(request: Request) {
   }
 
   log("info", "health check passed", requestId, startedAt);
-  return NextResponse.json({ ok: true, database: "healthy" });
+  return NextResponse.json(
+    { ok: true, database: "healthy" },
+    { headers: { "Cache-Control": "public, max-age=0, s-maxage=10" } },
+  );
 }
 
 function log(

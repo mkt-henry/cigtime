@@ -1,17 +1,19 @@
-import { headers } from "next/headers";
+"use client";
+
+import { useLang } from "@/hooks/useLang";
 import Link from "next/link";
 import { LinkButton } from "@/components/common/Button";
 import { ROOMS } from "@/lib/constants";
-import { isDaytime } from "@/lib/daytime";
-import { pickLang, t } from "@/lib/i18n";
+import { useDaytime } from "@/hooks/useDaytime";
+import { t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
 import { DragScroll } from "./DragScroll";
 import { HeroBackdrop } from "./HeroBackdrop";
 
-export async function Hero() {
-  const lang = pickLang((await headers()).get("accept-language"));
+export function Hero() {
+  const lang = useLang();
   const copy = t(lang);
-  const day = await isDaytime();
+  const day = useDaytime();
 
   return (
     <main>

@@ -1,11 +1,12 @@
-import { headers } from "next/headers";
+"use client";
+
+import { useLang } from "@/hooks/useLang";
 import { SiteFooter } from "@/components/common/SiteFooter";
 import { SiteNav } from "@/components/common/SiteNav";
-import { pickLang } from "@/lib/i18n";
 import { legalCopy, type LegalPageKey } from "@/lib/legal";
 
-export async function LegalPage({ page }: { page: LegalPageKey }) {
-  const copy = legalCopy(pickLang((await headers()).get("accept-language")), page);
+export function LegalPage({ page }: { page: LegalPageKey }) {
+  const copy = legalCopy(useLang(), page);
 
   return (
     <>

@@ -1,9 +1,11 @@
-import Link from "next/link";
-import { headers } from "next/headers";
-import { pickLang, t } from "@/lib/i18n";
+"use client";
 
-export async function SiteNav({ overlay = false }: { overlay?: boolean }) {
-  const copy = t(pickLang((await headers()).get("accept-language")));
+import Link from "next/link";
+import { useLang } from "@/hooks/useLang";
+import { t } from "@/lib/i18n";
+
+export function SiteNav({ overlay = false }: { overlay?: boolean }) {
+  const copy = t(useLang());
 
   return (
     <header
