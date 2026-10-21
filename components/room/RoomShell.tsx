@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ImagePlus, RotateCcw, Send, SmilePlus, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, Info, RotateCcw, Send, SmilePlus, Trash2 } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,6 +39,7 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { AmbientCanvas } from "./AmbientCanvas";
 import { MessageMenu } from "./MessageMenu";
 import { RitualObject } from "./RitualObject";
+import { RoomGuide } from "./RoomGuide";
 
 const AMBIENT_PREFIX = "ambient_";
 
@@ -88,6 +89,7 @@ export function RoomShell({ room }: { room: Room }) {
   const [onlineCount, setOnlineCount] = useState(1);
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "live" | "unavailable">("connecting");
   const [isSending, setIsSending] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const completedSessionRef = useRef<string | null>(null);
@@ -525,7 +527,9 @@ export function RoomShell({ room }: { room: Room }) {
   if (!anonymousUser) {
     return (
       <main className="grid min-h-screen place-items-center px-4">
+        <h1 className="sr-only">{room.name}</h1>
         <p className="text-fog">{copy.opening}</p>
+        <RoomGuide lang={lang} open={false} room={room} />
       </main>
     );
   }
@@ -572,6 +576,8 @@ export function RoomShell({ room }: { room: Room }) {
 
       <AmbientCanvas intensity={timer.isAccelerating ? 2.2 : 1} />
 
+      <RoomGuide lang={lang} onClose={() => setGuideOpen(false)} open={guideOpen} room={room} />
+
       <SharedAshtray label={copy.ashtrayLabel(todayCigaretteCount)} />
 
       {/* Top HUD */}
@@ -588,7 +594,7 @@ export function RoomShell({ room }: { room: Room }) {
             <ArrowLeft size={18} aria-hidden />
           </Link>
           <div className="min-w-0 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
-            <p className="truncate font-display text-2xl font-black uppercase leading-none text-mist">{room.name}</p>
+            <h1 className="truncate font-display text-2xl font-black uppercase leading-none text-mist">{room.name}</h1>
             <p className="mt-1 truncate text-xs text-fog">
               <span className="hidden sm:inline">{anonymousUser.nickname}</span>
               <span className="mx-1.5 hidden h-1 w-1 rounded-full bg-fog/60 align-middle sm:inline-block" aria-hidden />
@@ -628,6 +634,16 @@ export function RoomShell({ room }: { room: Room }) {
               type="button"
             >
               <ImagePlus size={16} aria-hidden />
+            </button>
+            <button
+              aria-controls="room-guide"
+              aria-expanded={guideOpen}
+              aria-label={copy.aboutRoom}
+              className="inline-flex h-full w-10 items-center justify-center text-fog transition hover:text-mist"
+              onClick={() => setGuideOpen(true)}
+              type="button"
+            >
+              <Info size={16} aria-hidden />
             </button>
             {roomBackground && (
               <button

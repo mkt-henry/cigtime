@@ -5,6 +5,9 @@ export type Room = {
   descriptionEs: string;
   placeholder: string;
   placeholderEs: string;
+  // A few sentences on who the room is for, shown in the room's "About this room" panel.
+  about: string;
+  aboutEs: string;
   isSilent?: boolean;
 };
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLang } from "@/hooks/useLang";
+import { FaqSection } from "@/components/common/FaqSection";
 import { SiteFooter } from "@/components/common/SiteFooter";
 import { SiteNav } from "@/components/common/SiteNav";
 import { ROOMS } from "@/lib/constants";
@@ -59,7 +60,26 @@ export function RoomsContent() {
             </li>
           ))}
         </ul>
+        <section className="mt-20 max-w-2xl">
+          <h2 className="font-display text-4xl font-black uppercase leading-none text-mist sm:text-5xl">
+            {copy.roomsHowTitle}
+          </h2>
+          <p className="mt-6 text-lg leading-relaxed text-fog">{copy.roomsHowBody}</p>
+          <dl className="mt-10 space-y-7">
+            {ROOMS.map((room) => (
+              <div key={room.slug}>
+                <dt className="text-lg font-semibold text-mist">
+                  <Link className="transition hover:text-sodium" href={`/room/${room.slug}`}>
+                    {room.name}
+                  </Link>
+                </dt>
+                <dd className="mt-1.5 leading-relaxed text-fog">{lang === "es" ? room.aboutEs : room.about}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </main>
+      <FaqSection className="pb-24" />
       <SiteFooter />
     </>
   );

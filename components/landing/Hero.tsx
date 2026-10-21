@@ -3,6 +3,7 @@
 import { useLang } from "@/hooks/useLang";
 import Link from "next/link";
 import { LinkButton } from "@/components/common/Button";
+import { FaqSection } from "@/components/common/FaqSection";
 import { ROOMS } from "@/lib/constants";
 import { useDaytime } from "@/hooks/useDaytime";
 import { t } from "@/lib/i18n";
@@ -21,7 +22,7 @@ export function Hero() {
         <HeroBackdrop day={day} />
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <h1 className="fade-up font-display text-[clamp(4.5rem,15vw,11.5rem)] font-black uppercase leading-[0.86] tracking-[-0.01em] text-mist">
+            <h1 className="rise-up font-display text-[clamp(4.5rem,15vw,11.5rem)] font-black uppercase leading-[0.86] tracking-[-0.01em] text-mist">
               {copy.heroTitle}
             </h1>
             <p
@@ -67,6 +68,17 @@ export function Hero() {
         </ol>
       </section>
 
+      <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-8 sm:pb-28">
+        <h2 className="font-display text-4xl font-black uppercase leading-none text-mist sm:text-5xl">
+          {copy.whyTitle}
+        </h2>
+        <div className="mt-8 max-w-2xl space-y-5 text-lg leading-relaxed text-fog">
+          {copy.whyBody.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      </section>
+
       <section className="pb-24">
         <h2 className="mx-auto max-w-6xl px-5 font-display text-4xl font-black uppercase leading-none text-mist sm:px-8 sm:text-5xl">
           {copy.spotsTitle}
@@ -96,6 +108,8 @@ export function Hero() {
           ))}
         </DragScroll>
       </section>
+
+      <FaqSection className="pb-24" />
     </main>
   );
 }

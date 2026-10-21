@@ -20,6 +20,19 @@ const EN = {
     { title: "Let it burn out", body: "When the minute is up you head back. What you said stays on the roof." },
   ],
   spotsTitle: "Where to stand",
+  whyTitle: "Why a minute",
+  whyBody: [
+    "Most smoke breaks were never about the cigarette. They were about stepping outside, saying one honest thing to whoever was there, and coming back a little lighter.",
+    "cigtime keeps that part. Pick a room, pick what burns (a cigarette, a lollipop, incense, coffee or a candle), say one line or nothing, and head back when it burns out. No feed to scroll, no profile to keep up, nothing that follows you around.",
+  ],
+  faqTitle: "Questions",
+  faq: [
+    { q: "Do I need an account?", a: "No. You get a random nickname that lives in this browser. There is no sign-up, email or password." },
+    { q: "Who can see what I write?", a: "Whoever is in the same room at that moment. Your line floats in the shared room and people can answer with same, real, oof, lol or hug. Links and contact details are blocked." },
+    { q: "How long do messages stay?", a: "Not long. Messages are deleted automatically after 24 hours, and nothing is kept as a public archive." },
+    { q: "Do I have to smoke?", a: "No. The cigarette is just the oldest excuse to step outside. A lollipop, incense, coffee or a candle burns down the same way." },
+    { q: "Is this a support or crisis service?", a: "No. cigtime is a short break, not therapy. If you are in danger, contact your local emergency number." },
+  ],
 
   navRooms: "Rooms",
   navReactions: "Reactions",
@@ -31,6 +44,10 @@ const EN = {
   roomsTitle: "Where are you stepping out?",
   roomsSubtitle: "Pick a room. A minute or a few, then you leave lighter.",
   roomsSilentTag: "no posting",
+  roomsHowTitle: "How the rooms work",
+  roomsHowBody: "Every room is anonymous and live. You can drop one line of up to 140 characters, others can react, and when your minute burns out you head back. Lines are deleted after 24 hours. Pick the room that matches what is on your mind, or the silent one if nothing is.",
+  aboutRoom: "About this room",
+  closeAbout: "Close",
 
   opening: "Opening room...",
   tapHint: "tap where your thought should land",
@@ -84,7 +101,7 @@ const EN = {
 
   metaTitle: "cigtime: a one-minute anonymous break",
   metaDescription:
-    "Step out for a minute. cigtime is an anonymous online smoke-break room: say one line, get a quiet reaction, and head back lighter. No sign-up.",
+    "Step out for a minute. cigtime is an anonymous one-minute break room: vent in one line, get a quiet reaction, and let it burn out. No sign-up.",
   metaRooms: "Pick a room for your break: a rooftop, a fire escape, a back step, a convenience store or a silent balcony. Anonymous, one minute.",
   metaRoom: (name: string, description: string) => `${name}: ${description} A one-minute anonymous room on cigtime.`,
 
@@ -123,6 +140,19 @@ const ES: Copy = {
     { title: "Deja que se consuma", body: "Cuando pasa el minuto, vuelves. Lo que dijiste se queda en la azotea." },
   ],
   spotsTitle: "Dónde quedarte",
+  whyTitle: "Por qué un minuto",
+  whyBody: [
+    "La mayoría de las pausas para fumar nunca fueron por el cigarrillo. Eran por salir, decirle algo sincero a quien estuviera ahí y volver un poco más ligero.",
+    "cigtime se queda con esa parte. Elige una sala, elige qué se consume (un cigarrillo, una paleta, incienso, café o una vela), di una línea o nada, y vuelve cuando se apague. Sin feed, sin perfil que mantener, nada que te siga después.",
+  ],
+  faqTitle: "Preguntas",
+  faq: [
+    { q: "¿Necesito una cuenta?", a: "No. Recibes un apodo al azar que vive en este navegador. No hay registro, correo ni contraseña." },
+    { q: "¿Quién puede ver lo que escribo?", a: "Quien esté en la misma sala en ese momento. Tu línea flota en la sala compartida y otros pueden responder con same, real, oof, lol o hug. Los enlaces y datos de contacto están bloqueados." },
+    { q: "¿Cuánto duran los mensajes?", a: "Poco. Los mensajes se borran automáticamente a las 24 horas y no se guardan como archivo público." },
+    { q: "¿Tengo que fumar?", a: "No. El cigarrillo es solo la excusa más vieja para salir un momento. Una paleta, incienso, café o una vela se consumen igual." },
+    { q: "¿Es un servicio de apoyo o de crisis?", a: "No. cigtime es una pausa corta, no terapia. Si estás en peligro, llama al número de emergencias de tu país." },
+  ],
 
   navRooms: "Salas",
   navReactions: "Reacciones",
@@ -134,6 +164,10 @@ const ES: Copy = {
   roomsTitle: "¿A dónde sales?",
   roomsSubtitle: "Elige una sala. Un minuto o unos pocos, y sales más ligero.",
   roomsSilentTag: "sin mensajes",
+  roomsHowTitle: "Cómo funcionan las salas",
+  roomsHowBody: "Todas las salas son anónimas y en vivo. Puedes soltar una línea de hasta 140 caracteres, otros pueden reaccionar y, cuando se consume tu minuto, vuelves. Las líneas se borran a las 24 horas. Elige la sala que encaje con lo que traes, o la silenciosa si no traes nada.",
+  aboutRoom: "Sobre esta sala",
+  closeAbout: "Cerrar",
 
   opening: "Abriendo la sala...",
   tapHint: "toca donde quieres que caiga tu pensamiento",
@@ -187,7 +221,7 @@ const ES: Copy = {
 
   metaTitle: "cigtime: un descanso anónimo de un minuto",
   metaDescription:
-    "Sal un minuto. cigtime es una sala anónima para tu pausa: di una línea, recibe una reacción tranquila y vuelve más ligero. Sin registro.",
+    "Sal un minuto. cigtime es una sala anónima para una pausa de un minuto: desahógate en una línea, recibe una reacción tranquila y deja que se consuma. Sin registro.",
   metaRooms: "Elige una sala para tu pausa: una azotea, una escalera de incendios, un escalón trasero, una tienda o un balcón en silencio. Anónimo, un minuto.",
   metaRoom: (name: string, description: string) => `${name}: ${description} Una sala anónima de un minuto en cigtime.`,
 
