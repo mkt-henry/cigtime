@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLang } from "@/hooks/useLang";
+import { GUIDES, guidePath } from "@/lib/guides";
 import { t } from "@/lib/i18n";
 
 export function SiteFooter() {
@@ -28,6 +29,14 @@ export function SiteFooter() {
         >
           {copy.navCoffee}
         </a>
+      </nav>
+      {/* Guide pages are English-only, so their titles stay untranslated. */}
+      <nav aria-label="Guides" className="-my-3 flex w-full flex-wrap gap-x-5">
+        {GUIDES.map((guide) => (
+          <Link key={guide.slug} className="py-3 transition hover:text-mist" href={guidePath(guide.slug)}>
+            {guide.title}
+          </Link>
+        ))}
       </nav>
     </footer>
   );
