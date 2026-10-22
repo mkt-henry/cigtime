@@ -27,7 +27,7 @@ const EN = {
   ],
   faqTitle: "Questions",
   faq: [
-    { q: "Do I need an account?", a: "No. You get a random nickname that lives in this browser. There is no sign-up, email or password." },
+    { q: "Do I need an account?", a: "No. You get a random nickname that lives in this browser. Signing in with Google is optional and only keeps your reactions with you across devices. Rooms stay anonymous either way." },
     { q: "Who can see what I write?", a: "Whoever is in the same room at that moment. Your line floats in the shared room and people can answer with same, real, oof, lol or hug. Links and contact details are blocked." },
     { q: "How long do messages stay?", a: "Not long. Messages are deleted automatically after 24 hours, and nothing is kept as a public archive." },
     { q: "Do I have to smoke?", a: "No. The cigarette is just the oldest excuse to step outside. A lollipop, incense, coffee or a candle burns down the same way." },
@@ -40,6 +40,14 @@ const EN = {
   navPrivacy: "Privacy",
   navTerms: "Terms",
   navCoffee: "Buy me a coffee",
+  navSignIn: "Sign in",
+
+  accountPitch: "Optional. Keep the reactions this browser received, on any device. In rooms you stay an anonymous nickname.",
+  accountContinueGoogle: "Continue with Google",
+  accountSignedInLabel: "Signed in as",
+  accountSignedInAs: (email: string) => `Signed in as ${email}`,
+  accountStillAnonymous: "Rooms still show only your random nickname. Nobody sees your email.",
+  accountSignOut: "Sign out",
 
   roomsTitle: "Where are you stepping out?",
   roomsSubtitle: "Pick a room. A minute or a few, then you leave lighter.",
@@ -119,6 +127,7 @@ const EN = {
   reactionsTitle: "What came back",
   addReaction: "React",
   reactionsSubtitle: "Reactions to thoughts left by this browser.",
+  reactionsSubtitleAccount: "Reactions to thoughts left by this browser and every browser you signed in on.",
   reactionsLoading: "Loading reactions...",
   reactionsError: "Reactions could not be loaded.",
   reactionsEmpty: "No reactions yet.",
@@ -147,7 +156,7 @@ const ES: Copy = {
   ],
   faqTitle: "Preguntas",
   faq: [
-    { q: "¿Necesito una cuenta?", a: "No. Recibes un apodo al azar que vive en este navegador. No hay registro, correo ni contraseña." },
+    { q: "¿Necesito una cuenta?", a: "No. Recibes un apodo al azar que vive en este navegador. Entrar con Google es opcional y solo sirve para llevar tus reacciones a otros dispositivos. Las salas siguen siendo anónimas igual." },
     { q: "¿Quién puede ver lo que escribo?", a: "Quien esté en la misma sala en ese momento. Tu línea flota en la sala compartida y otros pueden responder con same, real, oof, lol o hug. Los enlaces y datos de contacto están bloqueados." },
     { q: "¿Cuánto duran los mensajes?", a: "Poco. Los mensajes se borran automáticamente a las 24 horas y no se guardan como archivo público." },
     { q: "¿Tengo que fumar?", a: "No. El cigarrillo es solo la excusa más vieja para salir un momento. Una paleta, incienso, café o una vela se consumen igual." },
@@ -160,6 +169,14 @@ const ES: Copy = {
   navPrivacy: "Privacidad",
   navTerms: "Términos",
   navCoffee: "Invítame un café",
+  navSignIn: "Entrar",
+
+  accountPitch: "Opcional. Conserva las reacciones que recibió este navegador, en cualquier dispositivo. En las salas sigues siendo un apodo anónimo.",
+  accountContinueGoogle: "Continuar con Google",
+  accountSignedInLabel: "Sesión iniciada como",
+  accountSignedInAs: (email: string) => `Sesión iniciada como ${email}`,
+  accountStillAnonymous: "Las salas solo muestran tu apodo al azar. Nadie ve tu correo.",
+  accountSignOut: "Cerrar sesión",
 
   roomsTitle: "¿A dónde sales?",
   roomsSubtitle: "Elige una sala. Un minuto o unos pocos, y sales más ligero.",
@@ -239,6 +256,7 @@ const ES: Copy = {
   reactionsTitle: "Lo que volvió",
   addReaction: "Reaccionar",
   reactionsSubtitle: "Reacciones a los pensamientos que dejó este navegador.",
+  reactionsSubtitleAccount: "Reacciones a lo que dejó este navegador y cada navegador donde iniciaste sesión.",
   reactionsLoading: "Cargando reacciones...",
   reactionsError: "No se pudieron cargar las reacciones.",
   reactionsEmpty: "Todavía no hay reacciones.",

@@ -9,7 +9,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
   privacy: {
     title: "Privacy",
     intro:
-      "cigtime is anonymous by design. There are no accounts, no passwords, and no email addresses.",
+      "cigtime is anonymous by design. You never need an account. Signing in with Google is optional, and even then rooms only show your random nickname.",
     sections: [
       {
         heading: "What stays in your browser",
@@ -23,6 +23,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
         body: [
           "Sessions (room, ritual object, start and end time), messages, reactions, and reports, all keyed to the anonymous ID.",
           "Product analytics events such as entering a room or completing a session. They are counted, never sold or shared.",
+          "If you sign in with Google: your email address and Google account ID, and which anonymous IDs you signed in from, so the reactions you received follow you to other devices. Your email is never shown in rooms. Signing out gives that browser a new anonymous ID.",
           "We use Google Analytics, Microsoft Clarity and Vercel Analytics to understand how the site is used (pages visited, clicks and scrolling, device and approximate region). They set their own cookies; messages you write are never sent to them.",
         ],
       },
@@ -37,7 +38,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
         heading: "Your part",
         body: [
           "Do not post names, phone numbers, email addresses, links, or anything that identifies you or someone else. Links and contact details are blocked automatically, but nothing beats not typing them.",
-          "Clearing your browser storage resets your anonymous ID and detaches you from everything you wrote.",
+          "Clearing your browser storage resets your anonymous ID and detaches you from everything you wrote, unless that browser was signed in.",
         ],
       },
     ],
@@ -118,7 +119,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
   privacy: {
     title: "Privacidad",
     intro:
-      "cigtime es anónimo por diseño. No hay cuentas, ni contraseñas, ni direcciones de correo.",
+      "cigtime es anónimo por diseño. Nunca necesitas una cuenta. Entrar con Google es opcional y, aun así, las salas solo muestran tu apodo al azar.",
     sections: [
       {
         heading: "Lo que se queda en tu navegador",
@@ -132,6 +133,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
         body: [
           "Sesiones (sala, objeto, inicio y fin), mensajes, reacciones y reportes, siempre ligados al identificador anónimo.",
           "Eventos de producto como entrar en una sala o completar una sesión. Se cuentan; nunca se venden ni se comparten.",
+          "Si entras con Google: tu correo, el identificador de tu cuenta de Google y desde qué identificadores anónimos iniciaste sesión, para que las reacciones que recibiste te sigan a otros dispositivos. Tu correo nunca se muestra en las salas. Al cerrar sesión, ese navegador recibe un identificador anónimo nuevo.",
           "Usamos Google Analytics, Microsoft Clarity y Vercel Analytics para entender cómo se usa el sitio (páginas visitadas, clics y desplazamiento, dispositivo y región aproximada). Usan sus propias cookies; lo que escribes nunca se les envía.",
         ],
       },
@@ -146,7 +148,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
         heading: "Tu parte",
         body: [
           "No publiques nombres, teléfonos, correos, enlaces ni nada que te identifique a ti o a otra persona. Los enlaces y datos de contacto se bloquean solos, pero lo mejor es no escribirlos.",
-          "Si borras el almacenamiento del navegador, tu identificador anónimo se reinicia y te desvinculas de todo lo que escribiste.",
+          "Si borras el almacenamiento del navegador, tu identificador anónimo se reinicia y te desvinculas de todo lo que escribiste, salvo que ese navegador tuviera la sesión iniciada.",
         ],
       },
     ],

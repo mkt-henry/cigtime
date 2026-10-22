@@ -171,3 +171,13 @@ revoke execute on function purge_expired_messages(integer) from public, anon, au
 revoke execute on function get_daily_active_users(integer) from public, anon, authenticated;
 grant execute on function purge_expired_messages(integer) to service_role;
 grant execute on function get_daily_active_users(integer) to service_role;
+
+create table if not exists account_links (
+  anonymous_user_id text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  linked_at timestamptz not null default now()
+);
+
+create index if not exists account_links_user_linked_idx on account_links (user_id, linked_at);
+
+alter table account_links enable row level security;

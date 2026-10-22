@@ -3,6 +3,9 @@ import { createNickname } from "./nickname";
 import { createClientId } from "./id";
 
 const STORAGE_KEY = "cigtime.anonymousUser";
+// Fired on window whenever this browser switches to a different anonymous identity,
+// so mounted components re-read it instead of keeping the old one.
+export const IDENTITY_EVENT = "cigtime:identity";
 
 export function getOrCreateAnonymousUser(): AnonymousUser {
   if (typeof window === "undefined") {
@@ -28,6 +31,19 @@ export function getOrCreateAnonymousUser(): AnonymousUser {
   } catch {
     return anonymousUser;
   }
+  return anonymousUser;
+}
+
+// Gives this browser a new anonymous identity (used after sign-out, or when the
+// browser's identity already belongs to another account). Pass an id to adopt it.
+export function replaceAnonymousUser(id?: string): AnonymousUser {
+  const anonymousUser = id ? { id, nickname: createNickname() } : createAnonymousUser();
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(anonymousUser));
+  } catch {
+    // Storage blocked: the identity still applies for this page view.
+  }
+  window.dispatchEvent(new Event(IDENTITY_EVENT));
   return anonymousUser;
 }
 

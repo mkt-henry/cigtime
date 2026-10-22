@@ -3,6 +3,7 @@ import { REACTIONS } from "@/lib/constants";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { isAnonymousUserId, isUuid } from "@/lib/requestValidation";
+import { getLinkedAnonymousIds, getRequestUser } from "@/lib/server/account";
 
 export async function GET(request: Request) {
   // This inbox is browser-specific and must never enter a shared cache.
@@ -16,10 +17,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "DB not available." }, { status: 503 });
   }
 
+  // Signed-in visitors also see what every browser linked to their account left.
+  const user = await getRequestUser(supabase, request);
+  const anonymousUserIds = user
+    ? [...new Set([anonymousUserId, ...(await getLinkedAnonymousIds(supabase, user.id))])]
+    : [anonymousUserId];
+
   const { data, error } = await supabase
     .from("messages")
     .select("id, body, created_at, rooms(slug,name), reactions(reaction_type,created_at)")
-    .eq("anonymous_user_id", anonymousUserId)
+    .in("anonymous_user_id", anonymousUserIds)
     .eq("is_deleted", false)
     .eq("is_reported_hidden", false)
     .order("created_at", { ascending: false })
