@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AccountMenu } from "@/components/common/AccountMenu";
 import { useLang } from "@/hooks/useLang";
 import { t } from "@/lib/i18n";
 
@@ -26,6 +27,7 @@ export function SiteNav({ overlay = false }: { overlay?: boolean }) {
         <Link className="hidden rounded-full px-3 py-2 transition hover:text-mist sm:inline-block" href="/guidelines">
           {copy.navGuidelines}
         </Link>
+        <AccountMenu />
       </nav>
     </header>
   );

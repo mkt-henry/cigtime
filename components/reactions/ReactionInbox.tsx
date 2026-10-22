@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAccount } from "@/hooks/useAccount";
 import { useAnonymousUser } from "@/hooks/useAnonymousUser";
 import { useLang } from "@/hooks/useLang";
 import { REACTION_EMOJI } from "@/lib/constants";
@@ -19,11 +20,14 @@ type InboxMessage = {
 export function ReactionInbox() {
   const copy = t(useLang());
   const anonymousUser = useAnonymousUser();
+  const { ready, session } = useAccount();
+  const accessToken = session?.access_token ?? null;
   const [messages, setMessages] = useState<InboxMessage[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
-    if (!anonymousUser) return;
+    // Wait for the sign-in check so a signed-in visitor loads their account's inbox once.
+    if (!anonymousUser || !ready) return;
     const user = anonymousUser;
     let cancelled = false;
 
@@ -31,7 +35,7 @@ export function ReactionInbox() {
       try {
         const response = await fetch(
           `/api/reactions?anonymousUserId=${encodeURIComponent(user.id)}`,
-          { cache: "no-store" },
+          { cache: "no-store", headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined },
         );
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
@@ -48,7 +52,7 @@ export function ReactionInbox() {
     return () => {
       cancelled = true;
     };
-  }, [anonymousUser]);
+  }, [anonymousUser, ready, accessToken]);
 
   if (status === "loading") return <p className="text-fog">{copy.reactionsLoading}</p>;
   if (status === "error") return <p className="text-ember">{copy.reactionsError}</p>;
