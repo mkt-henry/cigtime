@@ -85,6 +85,9 @@ const EN = {
     count === 1 ? "1 reaction received." : `${count} reactions received.`,
   takeAnother: "Take another",
   leaveLighter: "Leave lighter",
+  adLabel: "Ad",
+  adContinueIn: (seconds: number) => `Continue in ${seconds}`,
+  adContinue: "Continue",
 
   reportOrMute: "Report or mute",
   muteUser: "Mute user",
@@ -214,6 +217,9 @@ const ES: Copy = {
     count === 1 ? "1 reacción recibida." : `${count} reacciones recibidas.`,
   takeAnother: "Otra vez",
   leaveLighter: "Salir más ligero",
+  adLabel: "Anuncio",
+  adContinueIn: (seconds: number) => `Sigue en ${seconds}`,
+  adContinue: "Continuar",
 
   reportOrMute: "Reportar o silenciar",
   muteUser: "Silenciar a esta persona",

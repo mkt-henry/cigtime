@@ -10,7 +10,11 @@ export const ANALYTICS_EVENTS = [
   "session_completed",
   "session_restarted",
   "share_clicked",
+  "ad_viewed",
+  "ad_clicked",
 ] as const;
+
+import type { AdEventMetadata } from "./ads";
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
 
@@ -19,9 +23,14 @@ export async function trackEvent(input: {
   eventName: AnalyticsEventName;
   roomSlug?: string;
   sessionId?: string | null;
+  metadata?: AdEventMetadata;
 }) {
   const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
-  gtag?.("event", input.eventName, { room_slug: input.roomSlug });
+  gtag?.("event", input.eventName, {
+    room_slug: input.roomSlug,
+    ad_id: input.metadata?.adId,
+    ad_placement: input.metadata?.placement,
+  });
 
   try {
     await fetch("/api/analytics", {

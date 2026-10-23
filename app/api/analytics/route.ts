@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAdEventMetadata } from "@/lib/ads";
 import { ANALYTICS_EVENTS } from "@/lib/analytics";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
@@ -36,6 +37,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
   }
 
+  const isAdEvent = body.eventName === "ad_viewed" || body.eventName === "ad_clicked";
+  if (isAdEvent ? !isAdEventMetadata(body.metadata) : body.metadata != null) {
+    return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
+  }
+
   const supabase = createServiceSupabaseClient();
   if (!supabase) {
     return NextResponse.json({ error: "DB not available." }, { status: 503 });
@@ -46,6 +52,7 @@ export async function POST(request: Request) {
     eventName: body.eventName,
     roomSlug: body.roomSlug,
     sessionId: body.sessionId,
+    metadata: isAdEvent ? body.metadata : undefined,
   });
 
   return new NextResponse(null, { status: 204 });

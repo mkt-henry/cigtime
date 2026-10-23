@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AdEventMetadata } from "@/lib/ads";
 import type { AnalyticsEventName } from "@/lib/analytics";
 
 export async function recordAnalyticsEvent(
@@ -8,6 +9,7 @@ export async function recordAnalyticsEvent(
     eventName: AnalyticsEventName;
     roomSlug?: string | null;
     sessionId?: string | null;
+    metadata?: AdEventMetadata;
   },
 ) {
   await supabase.from("analytics_events").insert({
@@ -15,5 +17,6 @@ export async function recordAnalyticsEvent(
     event_name: input.eventName,
     room_slug: input.roomSlug ?? null,
     session_id: input.sessionId ?? null,
+    metadata: input.metadata ?? {},
   });
 }
