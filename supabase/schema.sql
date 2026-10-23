@@ -78,7 +78,9 @@ create table if not exists analytics_events (
     'reaction_received',
     'session_completed',
     'session_restarted',
-    'share_clicked'
+    'share_clicked',
+    'ad_viewed',
+    'ad_clicked'
   )),
   room_slug text,
   session_id uuid references sessions(id) on delete set null,

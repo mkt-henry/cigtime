@@ -3,10 +3,11 @@
 import { ArrowLeft, ImagePlus, Info, RotateCcw, Send, SmilePlus, Trash2 } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { Button, LinkButton } from "@/components/common/Button";
+import { Button } from "@/components/common/Button";
 import {
   REACTIONS,
   REACTION_EMOJI,
@@ -28,6 +29,7 @@ import {
   saveRoomBackground,
   saveSessionDuration,
 } from "@/lib/storage";
+import { pickAd, type Ad, type AdPlacement } from "@/lib/ads";
 import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ReactionType, Room, SharedMessage } from "@/lib/types";
@@ -36,6 +38,7 @@ import { useDaytime } from "@/hooks/useDaytime";
 import { useLang } from "@/hooks/useLang";
 import { useMutedUsers } from "@/hooks/useMutedUsers";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
+import { AdBreak } from "./AdBreak";
 import { AmbientCanvas } from "./AmbientCanvas";
 import { MessageMenu } from "./MessageMenu";
 import { RitualObject } from "./RitualObject";
@@ -77,6 +80,8 @@ export function RoomShell({ room }: { room: Room }) {
   const [objectKey, setObjectKey] = useState(RITUAL_OBJECTS[0].key);
   const [droppedCount, setDroppedCount] = useState(0);
   const [lastThought, setLastThought] = useState<string | null>(null);
+  const [adBreak, setAdBreak] = useState<{ ad: Ad; placement: AdPlacement } | null>(null);
+  const router = useRouter();
   const [roomBackground, setRoomBackground] = useState<string | null>(null);
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([]);
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
@@ -481,6 +486,38 @@ export function RoomShell({ room }: { room: Room }) {
     });
   }
 
+  function startAdBreak(placement: AdPlacement) {
+    const ad = pickAd();
+    setAdBreak({ ad, placement });
+    if (anonymousUser) {
+      void trackEvent({
+        anonymousUserId: anonymousUser.id,
+        eventName: "ad_viewed",
+        metadata: { adId: ad.id, placement },
+        roomSlug: room.slug,
+        sessionId: activeSessionId,
+      });
+    }
+  }
+
+  function trackAdClick(ad: Ad, placement: AdPlacement) {
+    if (!anonymousUser) return;
+    void trackEvent({
+      anonymousUserId: anonymousUser.id,
+      eventName: "ad_clicked",
+      metadata: { adId: ad.id, placement },
+      roomSlug: room.slug,
+      sessionId: activeSessionId,
+    });
+  }
+
+  function finishAdBreak() {
+    const placement = adBreak?.placement;
+    setAdBreak(null);
+    if (placement === "take_another") restart();
+    if (placement === "leave_lighter") router.push("/");
+  }
+
   function restart() {
     timer.restart();
     setDroppedCount(0);
@@ -788,18 +825,29 @@ export function RoomShell({ room }: { room: Room }) {
             </motion.p>
             <motion.div className="mt-8 flex flex-col gap-3" variants={riseIn}>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button className="flex-1" onClick={restart} type="button">
+                <Button className="sm:flex-1" onClick={() => startAdBreak("take_another")} type="button">
                   <RotateCcw size={18} aria-hidden />
                   {copy.takeAnother}
                 </Button>
-                <LinkButton className="flex-1" href="/" variant="secondary">
+                <Button className="sm:flex-1" onClick={() => startAdBreak("leave_lighter")} type="button" variant="secondary">
                   {copy.leaveLighter}
-                </LinkButton>
+                </Button>
               </div>
               <ShareCard lang={lang} onShare={trackShare} roomSlug={room.slug} thought={lastThought} />
             </motion.div>
           </motion.div>
         </motion.section>
+      )}
+
+      {adBreak && (
+        <AdBreak
+          ad={adBreak.ad}
+          key={`${adBreak.placement}-${adBreak.ad.id}`}
+          lang={lang}
+          onAdClick={trackAdClick}
+          onDone={finishAdBreak}
+          placement={adBreak.placement}
+        />
       )}
     </main>
     </MotionConfig>
