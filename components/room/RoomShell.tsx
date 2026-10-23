@@ -35,6 +35,8 @@ import {
   MESSAGE_VISIBLE_MS,
   advanceBubbles,
   fadeOut,
+  firstAmbientAt,
+  nextAmbientAt,
   pickAmbientBody,
 } from "@/lib/bubbles";
 import { trackEvent } from "@/lib/analytics";
@@ -115,6 +117,7 @@ export function RoomShell({ room }: { room: Room }) {
   const backlogRef = useRef<SharedMessage[]>([]);
   const syncedOnceRef = useRef(false);
   const lastAmbientRef = useRef<string | null>(null);
+  const nextAmbientAtRef = useRef(0);
   const mutedUsersRef = useRef(mutedUsers);
   mutedUsersRef.current = mutedUsers;
 
@@ -166,10 +169,11 @@ export function RoomShell({ room }: { room: Room }) {
   }, [room.slug]);
 
   // One thought at a time while the room is quiet: replay what was already here,
-  // then random ambient lines. Every bubble fades out after a few seconds.
+  // then random ambient lines at random intervals. Every bubble fades out after a few seconds.
   useEffect(() => {
     if (!anonymousUser) return;
     const pool = getAmbientMessages(navigator.language);
+    nextAmbientAtRef.current = firstAmbientAt(Date.now());
 
     const id = window.setInterval(() => {
       const now = Date.now();
@@ -190,9 +194,13 @@ export function RoomShell({ room }: { room: Room }) {
 
         if (backlog.length) return showMessage(next, backlog[0], getRandomMessageTarget(), now);
 
+        if (now < nextAmbientAtRef.current) return next;
+
         const body = pickAmbientBody(pool, lastAmbientRef.current);
+        const ambient = createAmbientMessage(room.slug, body, now);
         lastAmbientRef.current = body;
-        return [createAmbientMessage(room.slug, body, now)];
+        nextAmbientAtRef.current = nextAmbientAt(ambient.hideAt);
+        return [ambient];
       });
     }, 500);
 

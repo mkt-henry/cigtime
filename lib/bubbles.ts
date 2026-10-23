@@ -35,6 +35,24 @@ export function fadeOut<T extends TimedBubble>(item: T, now: number): T {
   return { ...item, phase: "disappearing", hideAt: Math.min(item.hideAt, now) };
 }
 
+// A quiet room gets its first sample thought soon after you walk in, so it never
+// sits still for long, then the next ones drift in at random intervals.
+export const FIRST_AMBIENT_DELAY_MS: readonly [number, number] = [1_000, 3_000];
+export const AMBIENT_GAP_MS: readonly [number, number] = [2_000, 9_000];
+
+function between([min, max]: readonly [number, number], random: () => number) {
+  return min + Math.floor(random() * (max - min));
+}
+
+export function firstAmbientAt(enteredAt: number, random: () => number = Math.random): number {
+  return enteredAt + between(FIRST_AMBIENT_DELAY_MS, random);
+}
+
+// When the next sample thought may appear, counted from when the current one starts fading.
+export function nextAmbientAt(hideAt: number, random: () => number = Math.random): number {
+  return hideAt + FADE_OUT_MS + between(AMBIENT_GAP_MS, random);
+}
+
 // Random ambient line that is not the one just shown.
 export function pickAmbientBody(
   pool: readonly string[],
