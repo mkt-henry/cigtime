@@ -30,6 +30,15 @@ import {
   saveSessionDuration,
 } from "@/lib/storage";
 import { pickAd, type Ad, type AdPlacement } from "@/lib/ads";
+import {
+  AMBIENT_VISIBLE_MS,
+  MESSAGE_VISIBLE_MS,
+  advanceBubbles,
+  fadeOut,
+  firstAmbientAt,
+  nextAmbientAt,
+  pickAmbientBody,
+} from "@/lib/bubbles";
 import { trackEvent } from "@/lib/analytics";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ReactionType, Room, SharedMessage } from "@/lib/types";
@@ -45,6 +54,8 @@ import { RitualObject } from "./RitualObject";
 import { RoomGuide } from "./RoomGuide";
 
 const AMBIENT_PREFIX = "ambient_";
+// Recent thoughts already in the room when you walk in, replayed one at a time.
+const BACKLOG_SIZE = 5;
 
 const riseIn = {
   hidden: { opacity: 0, y: 14 },
@@ -61,6 +72,7 @@ function seedOf(id: string) {
 type FloatingMsg = {
   message: SharedMessage;
   phase: "visible" | "disappearing";
+  hideAt: number;
   target: MessageTarget;
 };
 
@@ -99,15 +111,22 @@ export function RoomShell({ room }: { room: Room }) {
   const chatInputRef = useRef<HTMLInputElement>(null);
   const completedSessionRef = useRef<string | null>(null);
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  // Real thoughts already shown or queued, so a refetch never brings one back.
+  const seenMessageIdsRef = useRef(new Set<string>());
+  // Thoughts that were in the room before you arrived, waiting for their turn.
+  const backlogRef = useRef<SharedMessage[]>([]);
+  const syncedOnceRef = useRef(false);
+  const lastAmbientRef = useRef<string | null>(null);
+  const nextAmbientAtRef = useRef(0);
+  const mutedUsersRef = useRef(mutedUsers);
+  mutedUsersRef.current = mutedUsers;
 
   const selectedObject = RITUAL_OBJECTS.find((object) => object.key === objectKey) ?? RITUAL_OBJECTS[0];
 
   const addMessage = useCallback((message: SharedMessage) => {
-    setFloatingMessages((current) => {
-      if (current.some((item) => item.message.id === message.id)) return current;
-      const real = current.filter((item) => !item.message.id.startsWith(AMBIENT_PREFIX));
-      return [...real, { message, phase: "visible" as const, target: getRandomMessageTarget() }].slice(-6);
-    });
+    if (seenMessageIdsRef.current.has(message.id)) return;
+    seenMessageIdsRef.current.add(message.id);
+    setFloatingMessages((current) => showMessage(current, message, getRandomMessageTarget()));
   }, []);
 
   const syncMessages = useCallback(async () => {
@@ -117,20 +136,24 @@ export function RoomShell({ room }: { room: Room }) {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Messages are unavailable.");
 
-    const latest = ((data.messages ?? []) as SharedMessage[]).slice(-6);
+    const latest = (data.messages ?? []) as SharedMessage[];
+    const fresh = latest.filter((message) => !seenMessageIdsRef.current.has(message.id));
+    for (const message of fresh) seenMessageIdsRef.current.add(message.id);
+    const firstSync = !syncedOnceRef.current;
+    syncedOnceRef.current = true;
+    // On arrival, older thoughts wait in line; anything new after that shows right away.
+    if (firstSync) backlogRef.current = fresh.slice(-BACKLOG_SIZE);
+
+    const byId = new Map(latest.map((message) => [message.id, message]));
     setFloatingMessages((current) => {
-      if (latest.length === 0) {
-        // Nobody has spoken yet — keep the room warm with ambient thoughts.
-        const ambient = current.filter((item) => item.message.id.startsWith(AMBIENT_PREFIX));
-        return ambient.length ? ambient : createAmbientMessages(room.slug);
-      }
-      const existing = new Map(current.map((item) => [item.message.id, item]));
-      return latest.map((message) => {
-        const item = existing.get(message.id);
-        return item
-          ? { ...item, message }
-          : { message, phase: "visible" as const, target: getRandomMessageTarget() };
+      let next = current.map((item) => {
+        const message = byId.get(item.message.id);
+        return message ? { ...item, message } : item;
       });
+      if (!firstSync) {
+        for (const message of fresh) next = showMessage(next, message, getRandomMessageTarget());
+      }
+      return next;
     });
     return data.roomId as string | undefined;
   }, [room.slug]);
@@ -138,6 +161,51 @@ export function RoomShell({ room }: { room: Room }) {
   useEffect(() => {
     setRoomBackground(getRoomBackground(room.slug));
   }, [room.slug]);
+
+  useEffect(() => {
+    seenMessageIdsRef.current = new Set();
+    backlogRef.current = [];
+    syncedOnceRef.current = false;
+  }, [room.slug]);
+
+  // One thought at a time while the room is quiet: replay what was already here,
+  // then random ambient lines at random intervals. Every bubble fades out after a few seconds.
+  useEffect(() => {
+    if (!anonymousUser) return;
+    const pool = getAmbientMessages(navigator.language);
+    nextAmbientAtRef.current = firstAmbientAt(Date.now());
+
+    const id = window.setInterval(() => {
+      const now = Date.now();
+      setFloatingMessages((current) => {
+        // Drop queued thoughts that are already on screen or from muted people.
+        backlogRef.current = backlogRef.current.filter(
+          (message) =>
+            !current.some((item) => item.message.id === message.id) &&
+            !mutedUsersRef.current.includes(message.anonymousUserId),
+        );
+        const backlog = backlogRef.current;
+
+        let next = advanceBubbles(current, now);
+        if (backlog.length && next.some((item) => item.phase === "visible" && isAmbientMessage(item))) {
+          next = next.map((item) => (isAmbientMessage(item) ? fadeOut(item, now) : item));
+        }
+        if (next.length) return next;
+
+        if (backlog.length) return showMessage(next, backlog[0], getRandomMessageTarget(), now);
+
+        if (now < nextAmbientAtRef.current) return next;
+
+        const body = pickAmbientBody(pool, lastAmbientRef.current);
+        const ambient = createAmbientMessage(room.slug, body, now);
+        lastAmbientRef.current = body;
+        nextAmbientAtRef.current = nextAmbientAt(ambient.hideAt);
+        return [ambient];
+      });
+    }, 500);
+
+    return () => window.clearInterval(id);
+  }, [anonymousUser, room.slug]);
 
   useEffect(() => {
     const saved = getSessionDuration();
@@ -238,7 +306,6 @@ export function RoomShell({ room }: { room: Room }) {
       } catch {
         if (disposed) return;
         setConnectionStatus("unavailable");
-        setFloatingMessages((current) => (current.length ? current : createAmbientMessages(room.slug)));
       }
     }
 
@@ -397,16 +464,15 @@ export function RoomShell({ room }: { room: Room }) {
       if (!response.ok) throw new Error(data.error ?? copy.errorSend);
 
       const message = { ...data, reactions: [] } as SharedMessage;
-      setFloatingMessages((current) => [
-        ...current.filter(
-          (item) => item.message.id !== message.id && !item.message.id.startsWith(AMBIENT_PREFIX),
-        ),
-        {
+      seenMessageIdsRef.current.add(message.id);
+      const target = messageTarget ?? getDefaultMessageTarget();
+      setFloatingMessages((current) =>
+        showMessage(
+          current.filter((item) => item.message.id !== message.id),
           message,
-          phase: "visible" as const,
-          target: messageTarget ?? getDefaultMessageTarget(),
-        },
-      ].slice(-6));
+          target,
+        ),
+      );
       setDroppedCount((value) => value + 1);
       setLastThought(scrubbedBody);
       void realtimeChannelRef.current?.send({
@@ -1058,30 +1124,41 @@ function ReactionBar({
   );
 }
 
-// Decorative thoughts shown while the room is empty. They carry the AMBIENT_PREFIX
-// so they stay out of reactions, reports, and the DB.
-function createAmbientMessages(roomSlug: string): FloatingMsg[] {
-  const pool = getAmbientMessages(typeof navigator === "undefined" ? "en" : navigator.language);
-  const now = Date.now();
+function isAmbientMessage(item: FloatingMsg) {
+  return item.message.id.startsWith(AMBIENT_PREFIX);
+}
 
-  return Array.from({ length: isNarrow() ? 2 : 3 }, (_, index) => ({
+// Puts a real thought on screen; ambient lines make room by fading out.
+function showMessage(
+  current: FloatingMsg[],
+  message: SharedMessage,
+  target: MessageTarget,
+  now = Date.now(),
+): FloatingMsg[] {
+  if (current.some((item) => item.message.id === message.id)) return current;
+  const rest = current.map((item) => (isAmbientMessage(item) ? fadeOut(item, now) : item));
+  return [...rest, { message, phase: "visible" as const, hideAt: now + MESSAGE_VISIBLE_MS, target }].slice(-6);
+}
+
+// Decorative thought shown while the room is quiet. It carries the AMBIENT_PREFIX
+// so it stays out of reactions, reports, and the DB.
+function createAmbientMessage(roomSlug: string, body: string, now: number): FloatingMsg {
+  const id = `${AMBIENT_PREFIX}${now}`;
+  return {
     message: {
-      id: `${AMBIENT_PREFIX}${index}`,
+      id,
       roomSlug,
       sessionId: null,
-      anonymousUserId: `${AMBIENT_PREFIX}${index}`,
+      anonymousUserId: id,
       nickname: createNickname(),
-      body: pool[Math.floor(Math.random() * pool.length)],
-      createdAt: new Date(now - (index + 1) * 24_000).toISOString(),
+      body,
+      createdAt: new Date(now).toISOString(),
       reactions: [],
     },
     phase: "visible" as const,
-    // Spread them out instead of stacking three random targets on top of each other.
-    target: getMessageTarget(
-      window.innerWidth * (index % 2 === 0 ? 0.32 : 0.68),
-      isNarrow() ? (index === 0 ? 0 : window.innerHeight / 2 + 200) : window.innerHeight * (0.28 + index * 0.2),
-    ),
-  }));
+    hideAt: now + AMBIENT_VISIBLE_MS,
+    target: getRandomMessageTarget(),
+  };
 }
 
 // Bubbles are centered on their target and can be up to 22rem wide, so the
