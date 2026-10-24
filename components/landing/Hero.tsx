@@ -92,8 +92,10 @@ export function Hero() {
                     alt={sceneFor(room.slug, day).alt}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                     decoding="async"
+                    height={507}
                     loading="lazy"
                     src={sceneFor(room.slug, day).small}
+                    width={900}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-asphalt/90 via-asphalt/10 to-transparent" />
                   <span className="absolute inset-x-4 bottom-4 font-display text-3xl font-black uppercase leading-none text-mist">

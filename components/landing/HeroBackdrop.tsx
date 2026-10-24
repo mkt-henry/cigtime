@@ -20,7 +20,9 @@ export function HeroBackdrop({ day }: { day: boolean }) {
             className="h-full w-full object-cover object-[30%_center]"
             decoding="async"
             fetchPriority="high"
+            height={941}
             src={scene.large}
+            width={1672}
           />
         </picture>
       </div>

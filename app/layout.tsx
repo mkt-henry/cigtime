@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Instrument_Sans } from "next/font/google";
 import { t } from "@/lib/i18n";
-import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION, SITE_URL } from "@/lib/site";
+import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION, NAVER_SITE_VERIFICATION, SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsTracker } from "@/components/common/AnalyticsTracker";
@@ -35,7 +35,7 @@ export function generateMetadata(): Metadata {
     title: { default: copy.metaTitle, template: "%s | cigtime" },
     description: copy.metaDescription,
     applicationName: "cigtime",
-    alternates: { canonical: "/" },
+    alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     openGraph: {
       title: copy.metaTitle,
       description: copy.metaDescription,
@@ -51,7 +51,10 @@ export function generateMetadata(): Metadata {
     },
     verification: {
       google: GOOGLE_SITE_VERIFICATION || undefined,
-      other: BING_SITE_VERIFICATION ? { "msvalidate.01": BING_SITE_VERIFICATION } : undefined,
+      other: {
+        ...(BING_SITE_VERIFICATION ? { "msvalidate.01": BING_SITE_VERIFICATION } : {}),
+        ...(NAVER_SITE_VERIFICATION ? { "naver-site-verification": NAVER_SITE_VERIFICATION } : {}),
+      },
     },
   };
 }
