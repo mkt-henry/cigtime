@@ -1,8 +1,14 @@
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/common/JsonLd";
 import { RoomShell } from "@/components/room/RoomShell";
 import { ROOMS } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/site";
+import { breadcrumb, webPage } from "@/lib/structuredData";
+
+function roomTitle(name: string) {
+  return `${name}: Anonymous One-Minute Room`;
+}
 
 // Fail the build if request-only rendering is introduced into this static page.
 export const dynamic = "error";
@@ -19,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ roomSlug:
   const room = ROOMS.find((item) => item.slug === roomSlug);
   if (!room) return {};
   return pageMetadata({
-    title: room.name,
+    title: roomTitle(room.name),
     description: t("en").metaRoom(room.name, room.description),
     path: `/room/${room.slug}`,
   });
@@ -37,5 +43,16 @@ export default async function RoomPage({
     notFound();
   }
 
-  return <RoomShell room={room} />;
+  const path = `/room/${room.slug}`;
+  return (
+    <>
+      <JsonLd
+        graph={[
+          webPage({ path, name: roomTitle(room.name), description: t("en").metaRoom(room.name, room.description) }),
+          breadcrumb([["Rooms", "/rooms"], [room.name, path]]),
+        ]}
+      />
+      <RoomShell room={room} />
+    </>
+  );
 }

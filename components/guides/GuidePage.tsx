@@ -4,35 +4,27 @@ import { SiteFooter } from "@/components/common/SiteFooter";
 import { SiteNav } from "@/components/common/SiteNav";
 import { GUIDES, guidePath, type Guide } from "@/lib/guides";
 import { sceneFor } from "@/lib/scenes";
-import { SITE_URL } from "@/lib/site";
+import { article, breadcrumb, CONTENT_DATES, jsonLd } from "@/lib/structuredData";
 
 export function GuidePage({ guide }: { guide: Guide }) {
   const scene = sceneFor(guide.roomSlug);
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "FAQPage",
-        mainEntity: guide.faq.map(({ q, a }) => ({
-          "@type": "Question",
-          name: q,
-          acceptedAnswer: { "@type": "Answer", text: a },
-        })),
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: new URL("/", SITE_URL).href },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: guide.title,
-            item: new URL(guidePath(guide.slug), SITE_URL).href,
-          },
-        ],
-      },
-    ],
-  };
+  const structuredData = jsonLd([
+    article({
+      path: guidePath(guide.slug),
+      headline: guide.title,
+      description: guide.description,
+      dates: CONTENT_DATES.guides,
+    }),
+    {
+      "@type": "FAQPage",
+      mainEntity: guide.faq.map(({ q, a }) => ({
+        "@type": "Question",
+        name: q,
+        acceptedAnswer: { "@type": "Answer", text: a },
+      })),
+    },
+    breadcrumb([[guide.title, guidePath(guide.slug)]]),
+  ]);
 
   return (
     <>
@@ -112,7 +104,7 @@ export function GuidePage({ guide }: { guide: Guide }) {
       <SiteFooter />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: structuredData }}
       />
     </>
   );

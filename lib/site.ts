@@ -6,6 +6,7 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://cigtime.com
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID ?? "G-9X8W8TMLYX";
 export const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_ID ?? "ytps1pqext";
 export const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "FOQK9FvOSDeYHt5-V2kiEOlHFA6uK6OExrzHwcIPUmE";
+export const NAVER_SITE_VERIFICATION = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? "3d78875b62afe6b2bd659f5846670acfb7b37484";
 export const BING_SITE_VERIFICATION = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "DD5E0C4A6898114F2203365933B47589";
 
 // Title, description, canonical URL and social card text for one page.
