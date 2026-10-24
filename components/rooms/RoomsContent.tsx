@@ -34,7 +34,9 @@ export function RoomsContent() {
                   alt={sceneFor(room.slug, day).alt}
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                   decoding="async"
+                  height={507}
                   src={sceneFor(room.slug, day).small}
+                  width={900}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(22,28,36,0.92)_0%,rgba(22,28,36,0.55)_45%,rgba(22,28,36,0.1)_100%)]" />
                 <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl border border-white/10" />
