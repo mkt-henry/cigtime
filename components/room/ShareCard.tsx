@@ -2,11 +2,12 @@
 
 import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
+import type { Lang } from "@/lib/i18n";
+import { LOCALES } from "@/lib/locales";
+import type { ShareText } from "@/lib/locales/types";
 import { SITE_URL } from "@/lib/site";
 
-type ShareLang = "en" | "es";
-
-const COPY: Record<ShareLang, { button: string; done: string; caption: string; tagline: string }> = {
+const COPY: Record<"en" | "es", ShareText> = {
   en: {
     button: "Share your cigtime",
     done: "Copied — go let it out",
@@ -29,13 +30,13 @@ export function ShareCard({
   thought,
 }: {
   compact?: boolean;
-  lang: ShareLang;
+  lang: Lang;
   onShare?: () => void;
   roomSlug: string;
   thought: string | null;
 }) {
   const [done, setDone] = useState(false);
-  const copy = COPY[lang];
+  const copy = lang === "en" || lang === "es" ? COPY[lang] : LOCALES[lang].share;
 
   async function handleShare() {
     onShare?.();

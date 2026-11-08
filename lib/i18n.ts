@@ -1,10 +1,31 @@
-// The product targets English- and Spanish-speaking users, so every visible
-// string lives here and is picked from the visitor's browser or request language.
+// Every visible string lives here (English and Spanish) or in lib/locales/<lang>.ts
+// (the other languages). The language follows the visitor's choice, else the browser.
+import { LOCALES } from "./locales/index.ts";
 
-export type Lang = "en" | "es";
+export const LANGS = ["en", "es", "ko", "ja", "zh", "pt", "de", "fr", "tr"] as const;
+
+export type Lang = (typeof LANGS)[number];
+
+// Shown in the language picker, each in its own language.
+export const LANG_NAMES: Record<Lang, string> = {
+  en: "English",
+  es: "Español",
+  ko: "한국어",
+  ja: "日本語",
+  zh: "简体中文",
+  pt: "Português",
+  de: "Deutsch",
+  fr: "Français",
+  tr: "Türkçe",
+};
+
+export function isLang(value: unknown): value is Lang {
+  return typeof value === "string" && (LANGS as readonly string[]).includes(value);
+}
 
 export function pickLang(raw?: string | null): Lang {
-  return (raw ?? "en").toLowerCase().startsWith("es") ? "es" : "en";
+  const code = (raw ?? "en").toLowerCase().split(/[-_]/)[0];
+  return isLang(code) ? code : "en";
 }
 
 const EN = {
@@ -41,6 +62,7 @@ const EN = {
   navTerms: "Terms",
   navCoffee: "Buy me a coffee",
   navSignIn: "Sign in",
+  languageLabel: "Language",
 
   accountPitch: "Optional. Keep the reactions this browser received, on any device. In rooms you stay an anonymous nickname.",
   accountContinueGoogle: "Continue with Google",
@@ -137,7 +159,7 @@ const EN = {
   reactionsCta: "Drop a thought in The Rooftop",
 };
 
-type Copy = typeof EN;
+export type Copy = typeof EN;
 
 const ES: Copy = {
   heroTitle: "Tómate un minuto.",
@@ -173,6 +195,7 @@ const ES: Copy = {
   navTerms: "Términos",
   navCoffee: "Invítame un café",
   navSignIn: "Entrar",
+  languageLabel: "Idioma",
 
   accountPitch: "Opcional. Conserva las reacciones que recibió este navegador, en cualquier dispositivo. En las salas sigues siendo un apodo anónimo.",
   accountContinueGoogle: "Continuar con Google",
@@ -269,7 +292,17 @@ const ES: Copy = {
   reactionsCta: "Suelta un pensamiento en The Rooftop",
 };
 
-const COPY: Record<Lang, Copy> = { en: EN, es: ES };
+const COPY: Record<Lang, Copy> = {
+  en: EN,
+  es: ES,
+  ko: LOCALES.ko.copy,
+  ja: LOCALES.ja.copy,
+  zh: LOCALES.zh.copy,
+  pt: LOCALES.pt.copy,
+  de: LOCALES.de.copy,
+  fr: LOCALES.fr.copy,
+  tr: LOCALES.tr.copy,
+};
 
 export function t(lang: Lang): Copy {
   return COPY[lang];

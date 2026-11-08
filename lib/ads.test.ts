@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ADS, isAdEventMetadata, pickAd } from "./ads.ts";
+import { ADS, adCopy, isAdEventMetadata, pickAd } from "./ads.ts";
+import { LANGS } from "./i18n.ts";
 
-test("every ad has copy in both languages", () => {
+test("every ad has copy in every language", () => {
   for (const ad of ADS) {
-    for (const lang of ["en", "es"] as const) {
-      const copy = ad.copy[lang];
+    for (const lang of LANGS) {
+      const copy = adCopy(ad, lang);
       assert.ok(copy.eyebrow && copy.headline && copy.body && copy.cta, `${ad.id} ${lang}`);
     }
   }

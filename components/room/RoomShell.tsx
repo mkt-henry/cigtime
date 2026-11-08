@@ -14,6 +14,7 @@ import {
   RITUAL_OBJECTS,
   SESSION_DURATION_OPTIONS,
   SESSION_DURATION_SEC,
+  roomText,
   type ReportReason,
 } from "@/lib/constants";
 import { Picker } from "./Picker";
@@ -172,7 +173,7 @@ export function RoomShell({ room }: { room: Room }) {
   // then random ambient lines at random intervals. Every bubble fades out after a few seconds.
   useEffect(() => {
     if (!anonymousUser) return;
-    const pool = getAmbientMessages(navigator.language);
+    const pool = getAmbientMessages(lang);
     nextAmbientAtRef.current = firstAmbientAt(Date.now());
 
     const id = window.setInterval(() => {
@@ -205,7 +206,7 @@ export function RoomShell({ room }: { room: Room }) {
     }, 500);
 
     return () => window.clearInterval(id);
-  }, [anonymousUser, room.slug]);
+  }, [anonymousUser, lang, room.slug]);
 
   useEffect(() => {
     const saved = getSessionDuration();
@@ -837,9 +838,7 @@ export function RoomShell({ room }: { room: Room }) {
                 placeholder={
                   room.isSilent
                     ? copy.silentPlaceholder
-                    : lang === "es"
-                      ? room.placeholderEs
-                      : room.placeholder
+                    : roomText(room, lang).placeholder
                 }
                 ref={chatInputRef}
                 value={inputBody}
