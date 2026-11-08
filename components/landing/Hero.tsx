@@ -4,7 +4,7 @@ import { useLang } from "@/hooks/useLang";
 import Link from "next/link";
 import { LinkButton } from "@/components/common/Button";
 import { FaqSection } from "@/components/common/FaqSection";
-import { ROOMS } from "@/lib/constants";
+import { ROOMS, roomText } from "@/lib/constants";
 import { useDaytime } from "@/hooks/useDaytime";
 import { t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
@@ -103,7 +103,7 @@ export function Hero() {
                   </span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-fog">
-                  {lang === "es" ? room.descriptionEs : room.description}
+                  {roomText(room, lang).description}
                 </p>
               </Link>
             </li>

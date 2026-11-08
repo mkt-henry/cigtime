@@ -1,9 +1,10 @@
-import type { Lang } from "./i18n";
+import type { Lang } from "./i18n.ts";
+import { LOCALES } from "./locales/index.ts";
 
 export type LegalPageKey = "privacy" | "terms" | "guidelines";
 
-type LegalSection = { heading: string; body: string[] };
-type LegalPageCopy = { title: string; intro: string; sections: LegalSection[] };
+export type LegalSection = { heading: string; body: string[] };
+export type LegalPageCopy = { title: string; intro: string; sections: LegalSection[] };
 
 const EN: Record<LegalPageKey, LegalPageCopy> = {
   privacy: {
@@ -225,5 +226,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
 };
 
 export function legalCopy(lang: Lang, page: LegalPageKey): LegalPageCopy {
-  return (lang === "es" ? ES : EN)[page];
+  if (lang === "en") return EN[page];
+  if (lang === "es") return ES[page];
+  return LOCALES[lang].legal[page];
 }

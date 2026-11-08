@@ -1,12 +1,14 @@
 "use client";
 
+import { Globe } from "lucide-react";
 import Link from "next/link";
-import { useLang } from "@/hooks/useLang";
+import { setLang, useLang } from "@/hooks/useLang";
 import { GUIDES, guidePath } from "@/lib/guides";
-import { t } from "@/lib/i18n";
+import { LANGS, LANG_NAMES, isLang, t } from "@/lib/i18n";
 
 export function SiteFooter() {
-  const copy = t(useLang());
+  const lang = useLang();
+  const copy = t(lang);
 
   return (
     <footer className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-white/10 px-5 py-8 text-sm text-fog sm:px-8">
@@ -29,6 +31,22 @@ export function SiteFooter() {
         >
           {copy.navCoffee}
         </a>
+        <label className="flex items-center gap-2 py-3">
+          <span className="sr-only">{copy.languageLabel}</span>
+          <Globe aria-hidden className="h-4 w-4" />
+          <select
+            aria-label={copy.languageLabel}
+            className="cursor-pointer bg-transparent text-fog outline-none transition hover:text-mist"
+            onChange={(event) => isLang(event.target.value) && setLang(event.target.value)}
+            value={lang}
+          >
+            {LANGS.map((code) => (
+              <option className="bg-asphalt text-mist" key={code} value={code}>
+                {LANG_NAMES[code]}
+              </option>
+            ))}
+          </select>
+        </label>
       </nav>
       {/* Guide pages are English-only, so their titles stay untranslated. */}
       <nav aria-label="Guides" className="-my-3 flex w-full flex-wrap gap-x-5">

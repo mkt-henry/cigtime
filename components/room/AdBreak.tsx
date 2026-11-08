@@ -4,7 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/common/Button";
-import { AD_BREAK_SECONDS, type Ad, type AdPlacement } from "@/lib/ads";
+import { AD_BREAK_SECONDS, adCopy, type Ad, type AdPlacement } from "@/lib/ads";
 import { t, type Lang } from "@/lib/i18n";
 
 // A short ad that has to play out before "Take another" or "Leave lighter" goes through.
@@ -22,7 +22,7 @@ export function AdBreak({
   placement: AdPlacement;
 }) {
   const copy = t(lang);
-  const adCopy = ad.copy[lang];
+  const localizedAd = adCopy(ad, lang);
   const [secondsLeft, setSecondsLeft] = useState(AD_BREAK_SECONDS);
 
   useEffect(() => {
@@ -58,11 +58,11 @@ export function AdBreak({
         </div>
         <div className="p-8">
           <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-fog/80">
-            <span>{adCopy.eyebrow}</span>
+            <span>{localizedAd.eyebrow}</span>
             <span className="rounded-full border border-white/15 px-2 py-0.5 tracking-normal">{copy.adLabel}</span>
           </div>
-          <h2 className="mt-5 font-display text-4xl font-black leading-[0.95] text-mist">{adCopy.headline}</h2>
-          <p className="mt-4 text-fog">{adCopy.body}</p>
+          <h2 className="mt-5 font-display text-4xl font-black leading-[0.95] text-mist">{localizedAd.headline}</h2>
+          <p className="mt-4 text-fog">{localizedAd.body}</p>
           <a
             className="mt-6 inline-flex items-center gap-1.5 font-semibold text-sodium transition hover:text-mist"
             href={ad.url}
@@ -70,7 +70,7 @@ export function AdBreak({
             rel="noopener noreferrer sponsored"
             target="_blank"
           >
-            {adCopy.cta}
+            {localizedAd.cta}
             <ArrowUpRight size={16} aria-hidden />
           </a>
           <Button

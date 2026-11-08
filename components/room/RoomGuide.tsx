@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { roomText } from "@/lib/constants";
 import { t, type Lang } from "@/lib/i18n";
 import type { Room } from "@/lib/types";
 
@@ -47,7 +48,7 @@ export function RoomGuide({
             </button>
           ) : null}
         </div>
-        <p className="mt-4 leading-relaxed text-mist/85">{lang === "es" ? room.aboutEs : room.about}</p>
+        <p className="mt-4 leading-relaxed text-mist/85">{roomText(room, lang).about}</p>
         <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-fog">{copy.roomsHowTitle}</h3>
         <p className="mt-2 text-[15px] leading-relaxed text-fog">{copy.roomsHowBody}</p>
         <dl className="mt-6 space-y-4">

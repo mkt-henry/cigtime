@@ -5,7 +5,7 @@ import { useLang } from "@/hooks/useLang";
 import { FaqSection } from "@/components/common/FaqSection";
 import { SiteFooter } from "@/components/common/SiteFooter";
 import { SiteNav } from "@/components/common/SiteNav";
-import { ROOMS } from "@/lib/constants";
+import { ROOMS, roomText } from "@/lib/constants";
 import { useDaytime } from "@/hooks/useDaytime";
 import { t } from "@/lib/i18n";
 import { sceneFor } from "@/lib/scenes";
@@ -51,7 +51,7 @@ export function RoomsContent() {
                       ) : null}
                     </span>
                     <span className="mt-2 block text-sm text-fog sm:text-base">
-                      {lang === "es" ? room.descriptionEs : room.description}
+                      {roomText(room, lang).description}
                     </span>
                   </div>
                   <span className="hidden shrink-0 rounded-full bg-sodium px-5 py-2.5 text-sm font-semibold text-asphalt opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 sm:block">
@@ -75,7 +75,7 @@ export function RoomsContent() {
                     {room.name}
                   </Link>
                 </dt>
-                <dd className="mt-1.5 leading-relaxed text-fog">{lang === "es" ? room.aboutEs : room.about}</dd>
+                <dd className="mt-1.5 leading-relaxed text-fog">{roomText(room, lang).about}</dd>
               </div>
             ))}
           </dl>

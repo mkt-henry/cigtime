@@ -1,3 +1,6 @@
+import type { Lang } from "./i18n.ts";
+import { LOCALES } from "./locales/index.ts";
+import type { RoomSlug, RoomText } from "./locales/types.ts";
 import type { ReactionType, RitualObject, Room } from "./types";
 
 export const SESSION_DURATION_SEC = 300;
@@ -67,6 +70,13 @@ export const ROOMS: Room[] = [
     isSilent: true,
   },
 ];
+
+// A room's description, input placeholder and "About this room" text in the visitor's language.
+export function roomText(room: Room, lang: Lang): RoomText {
+  if (lang === "en") return { description: room.description, placeholder: room.placeholder, about: room.about };
+  if (lang === "es") return { description: room.descriptionEs, placeholder: room.placeholderEs, about: room.aboutEs };
+  return LOCALES[lang].rooms[room.slug as RoomSlug];
+}
 
 export const RITUAL_OBJECTS: RitualObject[] = [
   {

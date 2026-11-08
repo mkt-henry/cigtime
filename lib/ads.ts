@@ -1,11 +1,12 @@
-import type { Lang } from "./i18n";
+import type { Lang } from "./i18n.ts";
+import { LOCALES } from "./locales/index.ts";
 
 // Seconds the ad break holds before "Take another" or "Leave lighter" goes through.
 export const AD_BREAK_SECONDS = 5;
 
 export type AdPlacement = "take_another" | "leave_lighter";
 
-type LocalizedAd = {
+export type LocalizedAd = {
   eyebrow: string;
   headline: string;
   body: string;
@@ -13,9 +14,10 @@ type LocalizedAd = {
 };
 
 export type Ad = {
-  id: string;
   url: string;
-  copy: Record<Lang, LocalizedAd>;
+  id: "house_advertise" | "house_coffee";
+  // English and Spanish live here; other languages in lib/locales/<lang>.ts.
+  copy: Record<"en" | "es", LocalizedAd>;
 };
 
 // House ads until a sponsor buys the slot. Add a sponsor by prepending an entry;
@@ -74,4 +76,9 @@ export function isAdEventMetadata(value: unknown): value is AdEventMetadata {
     (placement === "take_another" || placement === "leave_lighter") &&
     Object.keys(value).length === 2
   );
+}
+
+export function adCopy(ad: Ad, lang: Lang): LocalizedAd {
+  if (lang === "en" || lang === "es") return ad.copy[lang];
+  return LOCALES[lang].ads[ad.id];
 }

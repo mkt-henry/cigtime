@@ -1,6 +1,8 @@
+import type { Lang } from "./i18n.ts";
+import { LOCALES } from "./locales/index.ts";
+
 // Ambient floating messages shown in a room when no real person has spoken yet.
-// The product targets English- and Spanish-speaking users, so the pool is
-// localized and selected at runtime from the visitor's browser language.
+// English and Spanish are built here; other languages come from lib/locales/<lang>.ts.
 
 const EN_TOPICS = [
   "This whole day",
@@ -117,9 +119,9 @@ export const ES_CHAT_MESSAGES = buildMessages(ES_TOPICS, ES_COMMENTS);
 // English is the default pool (used for SSR and seed data).
 export const GENERAL_CHAT_MESSAGES = EN_CHAT_MESSAGES;
 
-// Pick the ambient pool that matches the visitor's browser language.
-export function getAmbientMessages(lang?: string): readonly string[] {
-  const code = (lang ?? "en").toLowerCase();
-  if (code.startsWith("es")) return ES_CHAT_MESSAGES;
-  return EN_CHAT_MESSAGES;
+// Pick the ambient pool that matches the visitor's language.
+export function getAmbientMessages(lang: Lang = "en"): readonly string[] {
+  if (lang === "en") return EN_CHAT_MESSAGES;
+  if (lang === "es") return ES_CHAT_MESSAGES;
+  return LOCALES[lang].ambient;
 }

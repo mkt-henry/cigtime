@@ -250,3 +250,8 @@ form input:focus-visible {
   0% { opacity: 0.6; transform: translate(0, 0) rotate(0deg); }
   100% { opacity: 0; transform: translate(8px, 30px) rotate(-14deg); }
 }
+
+/* Korean wraps between words, not in the middle of one. */
+:lang(ko) {
+  word-break: keep-all;
+}
