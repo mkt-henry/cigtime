@@ -26,6 +26,7 @@ const EN: Record<LegalPageKey, LegalPageCopy> = {
           "Product analytics events such as entering a room or completing a session. They are counted, never sold or shared.",
           "If you sign in with Google: your email address and Google account ID, and which anonymous IDs you signed in from, so the reactions you received follow you to other devices. Your email is never shown in rooms. Signing out gives that browser a new anonymous ID.",
           "We use Google Analytics, Microsoft Clarity and Vercel Analytics to understand how the site is used (pages visited, clicks and scrolling, device and approximate region). They set their own cookies; messages you write are never sent to them.",
+          "When a room is nearly empty, an AI (Claude, by Anthropic) may reply briefly. To do that, the room's messages from the last few minutes are sent to Anthropic, without your ID.",
         ],
       },
       {
@@ -136,6 +137,7 @@ const ES: Record<LegalPageKey, LegalPageCopy> = {
           "Eventos de producto como entrar en una sala o completar una sesión. Se cuentan; nunca se venden ni se comparten.",
           "Si entras con Google: tu correo, el identificador de tu cuenta de Google y desde qué identificadores anónimos iniciaste sesión, para que las reacciones que recibiste te sigan a otros dispositivos. Tu correo nunca se muestra en las salas. Al cerrar sesión, ese navegador recibe un identificador anónimo nuevo.",
           "Usamos Google Analytics, Microsoft Clarity y Vercel Analytics para entender cómo se usa el sitio (páginas visitadas, clics y desplazamiento, dispositivo y región aproximada). Usan sus propias cookies; lo que escribes nunca se les envía.",
+          "Cuando una sala está casi vacía, una IA (Claude, de Anthropic) puede responder brevemente. Para ello, los mensajes de los últimos minutos de la sala se envían a Anthropic, sin tu identificador.",
         ],
       },
       {

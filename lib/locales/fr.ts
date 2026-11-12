@@ -225,6 +225,7 @@ export const fr: Locale = {
             "Les événements d’usage, comme l’entrée dans un salon ou la fin d’une session. Ils sont comptabilisés, jamais vendus ni partagés.",
             "Si tu te connectes avec Google : ton adresse e-mail, l’identifiant de ton compte Google et les identifiants anonymes depuis lesquels tu t’es connecté, pour retrouver les réactions reçues sur tes autres appareils. Ton adresse e-mail n’apparaît jamais dans les salons. La déconnexion attribue un nouvel identifiant anonyme à ce navigateur.",
             "Nous utilisons Google Analytics, Microsoft Clarity et Vercel Analytics pour comprendre l’usage du site (pages visitées, clics, défilement, appareil et région approximative). Ces services déposent leurs propres cookies ; les messages que tu écris ne leur sont jamais transmis.",
+            "Quand une salle est presque vide, une IA (Claude, d'Anthropic) peut répondre brièvement. Pour cela, les messages des dernières minutes de la salle sont envoyés à Anthropic, sans ton identifiant.",
           ],
         },
         {

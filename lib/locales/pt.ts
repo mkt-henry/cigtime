@@ -227,6 +227,7 @@ export const pt: Locale = {
             "Eventos de uso do produto, como entrar em uma sala ou concluir uma sessão. Eles são contabilizados, nunca vendidos nem compartilhados.",
             "Se você entrar com Google: seu e-mail, o identificador da sua conta Google e os identificadores anônimos usados para entrar, para que as reações recebidas acompanhem você em outros dispositivos. Seu e-mail nunca aparece nas salas. Ao sair da conta, esse navegador recebe um novo identificador anônimo.",
             "Usamos Google Analytics, Microsoft Clarity e Vercel Analytics para entender como o site é usado (páginas visitadas, cliques e rolagem, dispositivo e região aproximada). Esses serviços usam seus próprios cookies; as mensagens que você escreve nunca são enviadas a eles.",
+            "Quando uma sala está quase vazia, uma IA (Claude, da Anthropic) pode responder brevemente. Para isso, as mensagens dos últimos minutos da sala são enviadas à Anthropic, sem o seu ID.",
           ],
         },
         {

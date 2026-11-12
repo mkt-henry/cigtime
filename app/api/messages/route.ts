@@ -1,8 +1,13 @@
 import { after, NextResponse } from "next/server";
 import { scrubMessage, validateMessage } from "@/lib/filters";
+import { isLang, pickLang } from "@/lib/i18n";
+import { maybePostCompanionReply } from "@/lib/server/companion";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { isAnonymousUserId, isShortString, isUuid } from "@/lib/requestValidation";
+
+// Leaves time for the near-empty-room companion reply, which runs after the response.
+export const maxDuration = 30;
 
 const MESSAGE_RETENTION_HOURS = Math.max(1, Number(process.env.MESSAGE_RETENTION_HOURS ?? 24) || 24);
 
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
   }
 
   const [{ data: room }, { data: session }] = await Promise.all([
-    supabase.from("rooms").select("id, is_silent").eq("slug", body.roomSlug).single(),
+    supabase.from("rooms").select("id, name, is_silent").eq("slug", body.roomSlug).single(),
     supabase
       .from("sessions")
       .select("id, room_id, anonymous_user_id, status, ends_at")
@@ -141,6 +146,16 @@ export async function POST(request: Request) {
       roomSlug: body.roomSlug,
       sessionId: body.sessionId,
     }),
+  );
+
+  const lang = isLang(body.lang) ? body.lang : pickLang(request.headers.get("accept-language"));
+  after(() =>
+    maybePostCompanionReply(supabase, {
+      lang,
+      roomId: room.id,
+      roomName: room.name,
+      roomSlug: body.roomSlug,
+    }).catch(() => undefined),
   );
 
   return NextResponse.json({
