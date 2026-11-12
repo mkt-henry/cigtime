@@ -454,6 +454,7 @@ export function RoomShell({ room }: { room: Room }) {
         body: JSON.stringify({
           anonymousUserId: anonymousUser.id,
           body: scrubbedBody,
+          lang,
           nickname: anonymousUser.nickname,
           roomSlug: room.slug,
           sessionId: activeSessionId,

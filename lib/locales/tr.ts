@@ -225,6 +225,7 @@ export const tr: Locale = {
             "Odaya girme veya oturumu tamamlama gibi uygulama kullanım olayları. Bunları sayarız; asla satmaz veya paylaşmayız.",
             "Google ile giriş yaparsan e-posta adresini, Google hesap kimliğini ve hangi anonim kimliklerden giriş yaptığını saklarız. Böylece aldığın tepkileri diğer cihazlarında da görebilirsin. E-postan odalarda asla gösterilmez. Çıkış yaptığında o tarayıcıya yeni bir anonim kimlik verilir.",
             "Sitenin nasıl kullanıldığını anlamak için Google Analytics, Microsoft Clarity ve Vercel Analytics kullanırız (ziyaret edilen sayfalar, tıklamalar ve kaydırmalar, cihaz ve yaklaşık bölge). Bu hizmetler kendi çerezlerini kullanır; yazdığın mesajlar onlara asla gönderilmez.",
+            "Bir oda neredeyse boşken bir yapay zekâ (Anthropic'in Claude'u) kısaca yanıt verebilir. Bunun için odadaki son birkaç dakikanın mesajları, kimliğin olmadan Anthropic'e gönderilir.",
           ],
         },
         {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCompanionId } from "@/lib/companion";
 import { REACTIONS } from "@/lib/constants";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { recordAnalyticsEvent } from "@/lib/server/analytics";
@@ -102,11 +103,14 @@ export async function POST(request: Request) {
       eventName: "reaction_sent",
       roomSlug: roomRelation?.slug,
     }),
-    recordAnalyticsEvent(supabase, {
-      anonymousUserId: message.anonymous_user_id,
-      eventName: "reaction_received",
-      roomSlug: roomRelation?.slug,
-    }),
+    // The near-empty-room companion is not a visitor, so it does not count as one.
+    isCompanionId(message.anonymous_user_id)
+      ? Promise.resolve()
+      : recordAnalyticsEvent(supabase, {
+          anonymousUserId: message.anonymous_user_id,
+          eventName: "reaction_received",
+          roomSlug: roomRelation?.slug,
+        }),
   ]);
 
   return NextResponse.json({

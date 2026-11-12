@@ -227,6 +227,7 @@ export const de: Locale = {
             "Ereignisse zur Nutzungsanalyse, etwa wenn du einen Raum betrittst oder eine Sitzung beendest. Sie werden gezählt, nie verkauft oder weitergegeben.",
             "Wenn du dich mit Google anmeldest: deine E-Mail-Adresse, deine Google-Konto-ID und die anonymen IDs, über die du dich angemeldet hast. So kannst du deine erhaltenen Reaktionen auch auf anderen Geräten sehen. Deine E-Mail-Adresse wird in den Räumen nie angezeigt. Beim Abmelden bekommt der Browser eine neue anonyme ID.",
             "Wir verwenden Google Analytics, Microsoft Clarity und Vercel Analytics, um die Nutzung der Website zu verstehen (besuchte Seiten, Klicks und Scrollen, Gerät und ungefähre Region). Diese Dienste setzen eigene Cookies. Deine Nachrichten werden nie an sie gesendet.",
+            "Wenn in einem Raum gerade kaum jemand ist, kann eine KI (Claude von Anthropic) kurz antworten. Dafür werden die Nachrichten der letzten Minuten in diesem Raum, ohne deine ID, an Anthropic gesendet.",
           ],
         },
         {
