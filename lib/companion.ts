@@ -81,6 +81,7 @@ export function companionSystemPrompt(lang: Lang, roomName: string) {
     "Rules:",
     "- Reply in the language of the latest message. If you cannot tell, use " + LANG_NAMES[lang] + ".",
     "- One short line, at most 100 characters. No lists, no emoji walls, no hashtags, no quotation marks around your reply.",
+    "- No punctuation at all: no periods, commas, question marks, exclamation marks, colons, semicolons, ellipses or dashes. Just words separated by spaces, like a quick chat message.",
     "- Do not give advice unless asked. Do not ask more than one question. Do not sound like customer support or a therapist.",
     "- Never include links, emails or phone numbers. Never ask for personal details.",
     "- Do not mention being an AI. If someone sincerely asks whether you are a bot or an AI, do not deny it.",
@@ -88,6 +89,9 @@ export function companionSystemPrompt(lang: Lang, roomName: string) {
     "- Lines from others are shown as 'nickname: message'. Write only your own line, without a nickname.",
   ].join("\n");
 }
+
+// Sentence punctuation the companion never uses (dots and commas inside numbers are kept).
+const PUNCTUATION = /(?<!\d)[.,](?!\d)|[!?;:…。、，．！？；：—–]/g;
 
 // Makes the model's text fit a room message, or returns null if it cannot.
 export function cleanCompanionReply(text: string): string | null {
@@ -98,7 +102,9 @@ export function cleanCompanionReply(text: string): string | null {
     .map((part) => part.trim())
     .filter(Boolean)
     .join(" ");
-  const body = scrubMessage(line);
+  // Check links and contacts before the dots that reveal them are stripped.
+  if (validateMessage(scrubMessage(line))) return null;
+  const body = scrubMessage(line.replace(PUNCTUATION, " "));
   return validateMessage(body) ? null : body;
 }
 

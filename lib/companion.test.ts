@@ -55,7 +55,10 @@ test("room history becomes alternating turns ending on a visitor", () => {
 test("reply is trimmed to one room-safe line", () => {
   assert.equal(cleanCompanionReply('"ㅋㅋ 고생했네"\n'), "ㅋㅋ 고생했네");
   assert.equal(cleanCompanionReply("Soft Toast: same here"), "same here");
-  assert.equal(cleanCompanionReply("Honestly: same"), "Honestly: same");
+  assert.equal(cleanCompanionReply("Honestly: same"), "Honestly same");
+  assert.equal(cleanCompanionReply("다섯 개면, 일은 언제 해요? 진짜..."), "다섯 개면 일은 언제 해요 진짜");
+  assert.equal(cleanCompanionReply("Ugh. Same, honestly!"), "Ugh Same honestly");
+  assert.equal(cleanCompanionReply("3.5시간 회의, 1,000번째"), "3.5시간 회의 1,000번째");
   assert.equal(cleanCompanionReply("see https://example.com"), null);
   assert.equal(cleanCompanionReply("x".repeat(200)), null);
   assert.equal(cleanCompanionReply("   "), null);
