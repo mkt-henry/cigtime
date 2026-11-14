@@ -10,3 +10,6 @@ tsconfig.tsbuildinfo
 supabase/.temp/
 .review
 .preview
+/.open-next/
+/.wrangler/
+.dev.vars*
